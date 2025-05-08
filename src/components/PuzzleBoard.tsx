@@ -6,6 +6,7 @@ type Props = {
   width: number;
   height: number;
   board: BoardPosition[];
+  motifStyle: 'circle' | 'symbol';
 };
 
 const PuzzleBoard: React.FC<Props> = ({ width, board }) => {
@@ -20,7 +21,7 @@ const PuzzleBoard: React.FC<Props> = ({ width, board }) => {
           className="aspect-square bg-gray-200 rounded flex items-center justify-center"
         >
           {cell.piece ? (
-            <Piece id={cell.piece.id} edges={cell.piece.edges} />
+            <Piece id={cell.piece.id} edges={cell.piece.edges} motifStyle={motifStyle} />
           ) : (
             <div className="w-full h-full bg-gray-300" />
           )}
