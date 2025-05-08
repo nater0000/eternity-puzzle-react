@@ -5,7 +5,7 @@ import PiecePalette from './components/PiecePalette';
 import ControlPanel from './components/ControlPanel';
 import { loadLegacyPuzzle } from './lib/loadLegacyPuzzle';
 import type { PuzzleBoardData } from './types/puzzle';
-import MotifSymbols from './components/MotifSymbols';
+import { MotifSymbols } from './components/MotifSymbols';
 
 const App: React.FC = () => {
   const [puzzleData, setPuzzleData] = useState<PuzzleBoardData | null>(null);
