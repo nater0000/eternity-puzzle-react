@@ -1,49 +1,59 @@
-import React from "react";
-import { motifDefinitions } from "../data/motifDefinitions";
+import React from 'react';
+import motifDefinitions from '../data/motifDefinitions';
 
-type Props = {
-  edge: string;
-  direction: 'top' | 'right' | 'bottom' | 'left';
-  motifStyle: 'circle' | 'symbol';
+export type MotifSvgProps = {
+  motif: string;
+  size: number;
+  style?: 'svg' | 'symbol' | 'circle';
 };
 
-const rotationDegrees: Record<Props["direction"], number> = {
-  top: 0,
-  right: 90,
-  bottom: 180,
-  left: 270,
-};
+const MotifSvg: React.FC<MotifSvgProps> = ({ motif, size, style = 'svg' }) => {
+  const definition = motifDefinitions[motif];
 
-const MotifSvg: React.FC<Props> = ({ edge, direction, motifStyle }) => {
-  const rotation = rotationDegrees[direction];
-  const motif = motifDefinitions[edge];
+  if (!definition) {
+    return (
+      <polygon
+        points="0,0 128,128 0,256"
+        fill="#999"
+        stroke="#999"
+        strokeWidth="1"
+      />
+    );
+  }
 
-  if (!motif) return null;
+  if (style === 'circle') {
+    return (
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={size / 2.5}
+        fill={definition.fill || '#999'}
+      />
+    );
+  }
 
+  if (style === 'symbol') {
+    return <use href={`#${motif}`} />;
+  }
+
+  // default 'svg'
   return (
-    <g transform={`rotate(${rotation}, 50, 50)`}>
-      {motifStyle === "circle" ? (
-        <circle
-          cx="50"
-          cy="20"
-          r="8"
-          fill={motif.color}
-          stroke="black"
-          strokeWidth="1"
+    <>
+      <polygon
+        points="0,0 128,128 0,256"
+        fill={definition.fill}
+        stroke="black"
+        strokeWidth="1"
+      />
+      {definition.path && (
+        <path
+          d={definition.path}
+          fill={definition.pathFill}
+          stroke={definition.pathStroke}
+          strokeWidth={definition.pathStrokeWidth || '1'}
         />
-      ) : (
-        <text
-          x="50"
-          y="25"
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize="18"
-          fill={motif.color}
-        >
-          {motif.symbol}
-        </text>
       )}
-    </g>
+    </>
   );
 };
 
