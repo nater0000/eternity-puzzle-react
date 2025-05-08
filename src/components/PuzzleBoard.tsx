@@ -7,7 +7,7 @@ type Props = {
   board: BoardPosition[];
 };
 
-const PuzzleBoard: React.FC<Props> = ({ width, height, board }) => {
+const PuzzleBoard: React.FC<Props> = ({ width, height: _height, board }) => {
   return (
     <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${width}, 1fr)` }}>
       {board.map((cell, idx) => (
