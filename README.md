@@ -3,6 +3,9 @@
 Welcome to the interactive **Eternity II puzzle solver**, built with **React**, **TypeScript**, **Vite**, and styled using **TailwindCSS**.  
 This project transforms the original static puzzle viewer into a dynamic, client-side drag-and-drop playground 🎯.
 
+[![Deployed with GitHub Pages](https://github.com/nater0000/eternity-puzzle-react/actions/workflows/deploy.yml/badge.svg)](https://github.com/nater0000/eternity-puzzle-react/actions/workflows/deploy.yml)
+🌐 [e2.rickey.io](https://e2.rickey.io)
+
 ---
 
 ## 🔧 Tech Stack

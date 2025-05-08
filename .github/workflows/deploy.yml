@@ -15,6 +15,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+
     steps:
     - name: Checkout Code 📥
       uses: actions/checkout@v3
@@ -27,6 +28,11 @@ jobs:
     - name: Install Dependencies 📦
       run: npm ci
 
+    - name: Lint and Type Check 🧹
+      run: |
+        npm run lint || echo "Lint warnings"
+        npm run typecheck || echo "Type errors"
+
     - name: Build App 🏗️
       run: npm run build
 
@@ -35,6 +41,6 @@ jobs:
       with:
         path: ./dist
 
-    - name: Deploy Site 🚀️
+    - name: Deploy Site 🚀
       id: deployment
       uses: actions/deploy-pages@v4
