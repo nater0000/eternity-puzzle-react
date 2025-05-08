@@ -26,7 +26,7 @@ const Piece: React.FC<Props> = ({ edges, id, motifStyle }) => {
         <MotifSvg
           key={i}
           edge={edge}
-          direction={["top", "right", "bottom", "left"][i] as any}
+          direction={["top", "right", "bottom", "left"][i] as 'top' | 'right' | 'bottom' | 'left'}
           motifStyle={motifStyle}
         />
       ))}

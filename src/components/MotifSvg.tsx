@@ -1,4 +1,5 @@
-import React from 'react';
+import React from "react";
+import { motifDefinitions } from "../data/motifDefinitions";
 
 type Props = {
   edge: string;
@@ -6,25 +7,41 @@ type Props = {
   motifStyle: 'circle' | 'symbol';
 };
 
+const rotationDegrees: Record<Props["direction"], number> = {
+  top: 0,
+  right: 90,
+  bottom: 180,
+  left: 270,
+};
+
 const MotifSvg: React.FC<Props> = ({ edge, direction, motifStyle }) => {
-  const transform = {
-    top: '',
-    right: 'rotate(90)',
-    bottom: 'rotate(180)',
-    left: 'rotate(270)',
-  }[direction];
+  const rotation = rotationDegrees[direction];
+  const motif = motifDefinitions[edge];
+
+  if (!motif) return null;
 
   return (
-    <g transform={`translate(50, 50) ${transform}`}>
-      {motifStyle === 'symbol' ? (
-        <use href={`#motif-${edge}`} />
+    <g transform={`rotate(${rotation}, 50, 50)`}>
+      {motifStyle === "circle" ? (
+        <circle
+          cx="50"
+          cy="20"
+          r="8"
+          fill={motif.color}
+          stroke="black"
+          strokeWidth="1"
+        />
       ) : (
-        <>
-          <circle r={10} fill={`hsl(${edge.charCodeAt(0) * 20}, 70%, 60%)`} />
-          <text textAnchor="middle" y="4" fontSize="10" fill="#000">
-            {edge}
-          </text>
-        </>
+        <text
+          x="50"
+          y="25"
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize="18"
+          fill={motif.color}
+        >
+          {motif.symbol}
+        </text>
       )}
     </g>
   );
