@@ -24,7 +24,7 @@ jobs:
       with:
         node-version: 20
 
-    - name: Install dependencies
+    - name: Install dependencies 📦
       run: npm ci
 
     - name: Build site

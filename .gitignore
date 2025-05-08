@@ -34,8 +34,4 @@ dist-ssr/
 *.sw?
 *.lock
 
-# Dependency lock files (optional, if using only one)
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
 
