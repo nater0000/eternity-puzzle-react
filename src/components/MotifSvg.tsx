@@ -3,10 +3,10 @@ import React from 'react';
 type Props = {
   edge: string;
   direction: 'top' | 'right' | 'bottom' | 'left';
+  motifStyle: 'circle' | 'symbol';
 };
 
-const MotifSvg: React.FC<Props> = ({ edge, direction }) => {
-  const size = 40;
+const MotifSvg: React.FC<Props> = ({ edge, direction, motifStyle }) => {
   const transform = {
     top: '',
     right: 'rotate(90)',
@@ -16,10 +16,16 @@ const MotifSvg: React.FC<Props> = ({ edge, direction }) => {
 
   return (
     <g transform={`translate(50, 50) ${transform}`}>
-      <circle r={10} fill={`hsl(${edge.charCodeAt(0) * 20}, 70%, 60%)`} />
-      <text textAnchor="middle" y="4" fontSize="10" fill="#000">
-        {edge}
-      </text>
+      {motifStyle === 'symbol' ? (
+        <use href={`#motif-${edge}`} />
+      ) : (
+        <>
+          <circle r={10} fill={`hsl(${edge.charCodeAt(0) * 20}, 70%, 60%)`} />
+          <text textAnchor="middle" y="4" fontSize="10" fill="#000">
+            {edge}
+          </text>
+        </>
+      )}
     </g>
   );
 };
