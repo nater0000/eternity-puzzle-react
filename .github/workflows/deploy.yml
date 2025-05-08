@@ -16,19 +16,24 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code 📥
+    - name: Checkout Code 📥
       uses: actions/checkout@v3
 
-    - name: Setup Node.js 🧱
+    - name: Setup Node 🧱
       uses: actions/setup-node@v3
       with:
         node-version: 20
 
-    - name: Install dependencies 📦
+    - name: Install Dependencies 📦
       run: npm ci
 
-    - name: Build app 🏗️
+    - name: Build App 🏗️
       run: npm run build
+
+    - name: Upload Artifact 🧩
+      uses: actions/upload-pages-artifact@v1
+      with:
+        path: ./dist
 
     - name: Deploy Site 🚀️
       id: deployment
