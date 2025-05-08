@@ -9,7 +9,7 @@ type Props = {
   motifStyle: 'circle' | 'symbol';
 };
 
-const PuzzleBoard: React.FC<Props> = ({ width, board }) => {
+const PuzzleBoard: React.FC<Props> = ({ width, board, motifStyle }) => {
   return (
     <div
       className="grid gap-1 bg-gray-800 p-2 rounded shadow"
