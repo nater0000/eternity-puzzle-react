@@ -1,0 +1,37 @@
+name: Build & Test React App 🛠️
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code 📥
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js 🧱
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+
+    - name: Install dependencies 📦
+      run: npm ci
+
+    - name: Lint and Type Check 🧹
+      run: |
+        npm run lint || echo "Lint warnings"
+        npm run typecheck || echo "Type errors"
+
+    - name: Build app 🏗️
+      run: npm run build
+
+    - name: Upload build artifacts 🪄
+      uses: actions/upload-artifact@v3
+      with:
+        name: build
+        path: dist
