@@ -1,54 +1,63 @@
-# React + TypeScript + Vite
+# 🧩 Eternity Puzzle Solver — React + Tailwind + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Welcome to the interactive **Eternity II puzzle solver**, built with **React**, **TypeScript**, **Vite**, and styled using **TailwindCSS**.  
+This project transforms the original static puzzle viewer into a dynamic, client-side drag-and-drop playground 🎯.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🔧 Tech Stack
 
-## Expanding the ESLint configuration
+- ⚛️ React 18
+- ⚡ Vite
+- 🎨 TailwindCSS
+- ✨ TypeScript
+- 🔁 Hot Module Reloading
+- ☁️ GitHub Actions CI/CD
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 📦 Project Features (Planned)
+
+- ✅ React architecture scaffolded
+- 🎨 TailwindCSS fully integrated
+- 🧱 Puzzle board rendered via SVG
+- 🖱️ Drag-and-drop support with multi-selection
+- 🧮 Live conflict detection and scoring
+- 📋 Sidebar of unused pieces
+- 💾 Save/load board state locally
+- 🔁 GitHub Actions CI for auto builds
+
+---
+
+## 📈 Progress Tracker
+
+| Feature                     | Status         |
+|----------------------------|----------------|
+| Vite + Tailwind setup      | ✅ Done         |
+| GitHub repo + CI workflow  | 🔧 In Progress  |
+| PuzzleBoard component      | 🔲 Planned      |
+| Piece drag-and-drop logic  | 🔲 Planned      |
+| Sidebar + piece selector   | 🔲 Planned      |
+
+---
+
+## 🚀 Getting Started
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Then open [http://localhost:5173](http://localhost:5173) in your browser.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+## 👨‍💻 Author
+
+Made with love 💙 by [@nater0000](https://github.com/nater0000)
+
+---
+
+## 📝 License
+
+MIT
