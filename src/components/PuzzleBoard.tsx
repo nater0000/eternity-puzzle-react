@@ -1,5 +1,6 @@
-import React from 'react';
-import type { BoardPosition } from '../types/puzzle';
+import React from "react";
+import type { BoardPosition } from "../types/puzzle";
+import Piece from "./Piece";
 
 type Props = {
   width: number;
@@ -7,15 +8,22 @@ type Props = {
   board: BoardPosition[];
 };
 
-const PuzzleBoard: React.FC<Props> = ({ width, height: _height, board }) => {
+const PuzzleBoard: React.FC<Props> = ({ width, board }) => {
   return (
-    <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${width}, 1fr)` }}>
+    <div
+      className="grid gap-1 bg-gray-800 p-2 rounded shadow"
+      style={{ gridTemplateColumns: `repeat(${width}, 1fr)` }}
+    >
       {board.map((cell, idx) => (
         <div
           key={idx}
-          className="aspect-square bg-gray-300 border border-gray-500 flex items-center justify-center"
+          className="aspect-square bg-gray-200 rounded flex items-center justify-center"
         >
-          {cell.piece ? `#${cell.piece.id}` : '•'}
+          {cell.piece ? (
+            <Piece id={cell.piece.id} edges={cell.piece.edges} />
+          ) : (
+            <div className="w-full h-full bg-gray-300" />
+          )}
         </div>
       ))}
     </div>
