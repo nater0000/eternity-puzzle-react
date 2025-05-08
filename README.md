@@ -3,9 +3,9 @@
 Welcome to the interactive **Eternity II puzzle solver**, built with **React**, **TypeScript**, **Vite**, and styled using **TailwindCSS**.  
 This project transforms the original static puzzle viewer into a dynamic, client-side drag-and-drop playground 🎯.
 
-[![Deployed with GitHub Pages](https://github.com/nater0000/eternity-puzzle-react/actions/workflows/deploy.yml/badge.svg)](https://github.com/nater0000/eternity-puzzle-react/actions/workflows/deploy.yml)
-🌐 [e2.rickey.io](https://e2.rickey.io)
-
+---
+[![Deploy using GitHub Pages](https://github.com/nater0000/eternity-puzzle-react/actions/workflows/deploy.yml/badge.svg)](https://github.com/nater0000/eternity-puzzle-react/actions/workflows/deploy.yml)
+🚀 Deployed to: [e2.rickey.io](https://e2.rickey.io)
 ---
 
 ## 🔧 Tech Stack
@@ -37,8 +37,8 @@ This project transforms the original static puzzle viewer into a dynamic, client
 | Feature                     | Status         |
 |----------------------------|----------------|
 | Vite + Tailwind setup      | ✅ Done         |
-| GitHub repo + CI workflow  | 🔧 In Progress  |
-| PuzzleBoard component      | 🔲 Planned      |
+| GitHub repo + CI workflow  | ✅ Done         |
+| PuzzleBoard component      | 🔧 In Progress  |
 | Piece drag-and-drop logic  | 🔲 Planned      |
 | Sidebar + piece selector   | 🔲 Planned      |
 
@@ -50,7 +50,7 @@ This project transforms the original static puzzle viewer into a dynamic, client
 npm install
 npm run dev
 ```
-
+This runs the local development environment at `localhost:5173`:
 Then open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---

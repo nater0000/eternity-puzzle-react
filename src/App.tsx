@@ -1,17 +1,20 @@
-//import { useState } from 'react'
-//import reactLogo from './assets/react.svg'
-//import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import Header from './components/Header';
+import PuzzleBoard from './components/PuzzleBoard';
+import PiecePalette from './components/PiecePalette';
+import ControlPanel from './components/ControlPanel';
 
-function App() {
-  //const [count, setCount] = useState(0)
+const App: React.FC = () => {
+    return (
+        <div className="max-w-7xl mx-auto p-4 space-y-4">
+            <Header />
+            <ControlPanel />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <PuzzleBoard />
+                <PiecePalette />
+            </div>
+        </div>
+    );
+};
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
-      <h1 className="text-4xl font-bold mb-4">Tailwind is working 🎉</h1>
-      <p className="text-lg">This is styled with Tailwind CSS.</p>
-    </div>
-  )
-}
-
-export default App
+export default App;

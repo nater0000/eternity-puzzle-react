@@ -24,6 +24,7 @@ dist-ssr/
 
 # IDEs and OS
 .DS_Store
+.vs/*
 .vscode/*
 !.vscode/extensions.json
 .idea
