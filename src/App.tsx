@@ -1,24 +1,32 @@
-﻿import React from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import Header from './components/Header';
 import PuzzleBoard from './components/PuzzleBoard';
 import PiecePalette from './components/PiecePalette';
 import ControlPanel from './components/ControlPanel';
 import { loadLegacyPuzzle } from './lib/loadLegacyPuzzle';
+import type { PuzzleBoardData } from './types/puzzle';
 
 const App: React.FC = () => {
-  const puzzleData = loadLegacyPuzzle();
+  const [puzzleData, setPuzzleData] = useState<PuzzleBoardData | null>(null);
+
+  useEffect(() => {
+    const loaded = loadLegacyPuzzle();
+    setPuzzleData(loaded);
+  }, []);
 
   return (
-    <main className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Eternity Puzzle Solver 🧩</h1>
-      <div className="max-w-7xl mx-auto p-4 space-y-4">
+    <main className="min-h-screen bg-zinc-900 text-white">
+      <div className="max-w-7xl mx-auto p-4 space-y-6">
         <Header />
         <ControlPanel />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <div className="grid md:grid-cols-3 gap-4 items-start">
           {puzzleData ? (
             <PuzzleBoard {...puzzleData} />
           ) : (
-            <p className="text-red-600">⚠️ Failed to load puzzle data from URL.</p>
+            <div className="md:col-span-2 p-4 border border-red-400 text-red-300 rounded">
+              ⚠️ Failed to load puzzle data from URL.
+            </div>
           )}
           <PiecePalette />
         </div>
