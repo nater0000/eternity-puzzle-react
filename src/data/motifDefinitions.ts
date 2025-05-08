@@ -1,73 +1,33 @@
-// src/data/motifDefinitions.ts
-const motifDefinitions: Record<string, string> = {
-  "00": `<polygon points="0,0 128,128 0,256" style="fill:#9a9a9a;stroke:#9a9a9a;stroke-width:1" />`,
-  "01": `<polygon points="0,0 128,128 0,256" style="fill:#26638e;stroke:black;stroke-width:1" />
-         <path d="M0,56 a16,16 0 1,1 8,32 v 32 h 32 a16,16 0 1,1 0,16 h -32 v 32 a16,16 0 1,1 -8,32"
-               fill="#f38622" stroke="#c1732d" stroke-width="1" />`,
-  "02": `<polygon points="0,0 128,128 0,256" style="fill:#5cc9f2;stroke:black;stroke-width:1" />
-         <path d="M0,0 m0,32 l 32,32 l -8,8 l 32,32 l 8,-8 l 32,32 l -32,32 l -8,-8 l -32,32 l 8,8 l -32,32"
-               fill="#ee3fa8" stroke="#8682bc" stroke-width="1" />`,
-  "03": `<polygon points="0,0 128,128 0,256" style="fill:#854aa3;stroke:black;stroke-width:1" />
-         <path d="M0,96 v -32 a64,64 30 0,1 0,128 v -40 l 24,24 l 24,-24 l -24,-24 l 24,-24 l -24,-24 l -24,24"
-               fill="#eced25" stroke="#c9bb4b" stroke-width="1" />`,
-  "04": `<polygon points="0,0 128,128 0,256" style="fill:#33b441;stroke:black;stroke-width:1" />
-         <path d="M0,64 h 32 l 32,32 v 64 l -32,32 h -32 v -16 a48,48 30 1,0 0,-96"
-               fill="#265e93" stroke="#3b6c8c" stroke-width="1" />`,
-  "05": `<polygon points="0,0 128,128 0,256" style="fill:#5cc9f2;stroke:black;stroke-width:1" />
-         <path d="M0,32 l 32,32 l -8,40 l 40,-8 l 32,32 l -32,32 l -40,-8 l 8,40 l -32,32"
-               fill="#ee3fa8" stroke="#8682bc" />`,
-  "06": `<polygon points="0,0 128,128 0,256" style="fill:#ac3c6b;stroke:black;stroke-width:1" />
-         <path d="M0,96 v -32 a64,64 30 0,1 0,128 v -40 l 24,24 l 24,-24 l -24,-24 l 24,-24 l -24,-24 l -24,24"
-               fill="#2bb35a" stroke="#76615e" stroke-width="1" />`,
-  "07": `<polygon points="0,0 128,128 0,256" style="fill:#ee3ea8;stroke:black;stroke-width:1" />
-         <path d="M0,56 a16,16 0 1,1 8,32 v 32 h 32 a16,16 0 1,1 0,16 h -32 v 32 a16,16 0 1,1 -8,32"
-               fill="#f0ed24" stroke="#d7ad60" stroke-width="1" />`,
-  "08": `<polygon points="0,0 128,128 0,256" style="fill:#f88512;stroke:black;stroke-width:1" />
-         <path d="M0,48 h 16 a64,64 30 0,0 64,64 v 32 a64,64 30 0,0 -64,64 h -16"
-               fill="#80d5f8" stroke="#9ea599" stroke-width="1" />`,
-  "09": `<polygon points="0,0 128,128 0,256" style="fill:#265e92;stroke:black;stroke-width:1" />
-         <path d="M0,32 l 96,96 l -96,96 v -32 l 64,-64 l -64,-64"
-               fill="#75cff2" stroke="#4585ad" stroke-width="1" />`,
-  "0a": `<polygon points="0,0 128,128 0,256" style="fill:#eded25;stroke:black;stroke-width:1" />
-         <path d="M0,32 l 96,96 l -96,96 v -32 l 64,-64 l -64,-64"
-               fill="#2bb356" stroke="#cbcd2a" stroke-width="1" />`,
-  "0b": `<polygon points="0,0 128,128 0,256" style="fill:#32b459;stroke:black;stroke-width:1" />
-         <path d="M0,56 a16,16 0 1,1 8,32 v 32 h 32 a16,16 0 1,1 0,16 h -32 v 32 a16,16 0 1,1 -8,32"
-               fill="#ee3ea8" stroke="#698367" stroke-width="1" />`,
-  "0c": `<polygon points="0,0 128,128 0,256" style="fill:#831b43;stroke:black;stroke-width:1" />
-         <path d="M-8,128 m0,-40 a16,16 30 1,1 16,0 l 32,32 a16,16 30 1,1 0,16 l -32,32 a16,16 30 1,1 -16,0
-                  l 8,-16 l 24,-24 l -24,-24"
-               fill="#f48614" stroke="#b76742" stroke-width="1" />`,
-  "0d": `<polygon points="0,0 128,128 0,256" style="fill:#fdf103;stroke:black;stroke-width:1" />
-         <path d="M0,0 m0,32 l 32,32 l -8,8 l 32,32 l 8,-8 l 32,32 l -32,32 l -8,-8 l -32,32 l 8,8 l -32,32"
-               fill="#145c8c" stroke="#8e9743" stroke-width="1" />`,
-  "0e": `<polygon points="0,0 128,128 0,256" style="fill:#2bb35a;stroke:black;stroke-width:1" />
-         <path d="M0,32 l 32,32 l -8,40 l 40,-8 l 32,32 l -32,32 l -40,-8 l 8,40 l -32,32"
-               fill="#f4892a" stroke="#778e3d" />`,
-  "0f": `<polygon points="0,0 128,128 0,256" style="fill:#864ba3;stroke:black;stroke-width:1" />
-         <path d="M0,32 l 32,32 l -8,40 l 40,-8 l 32,32 l -32,32 l -40,-8 l 8,40 l -32,32"
-               fill="#b6e8f9" stroke="#8d8db2" />`,
-  "10": `<polygon points="0,0 128,128 0,256" style="fill:#155c8c;stroke:black;stroke-width:1" />
-         <path d="M0,64 a32,32 30 0,1 32,32 a32,32 30 0,1 0,64 a32,32 30 0,1 -32,32 v -32 a32,32 30 0,0 0,-64"
-               fill="#fef102" stroke="#7c8c48" stroke-width="1" />`,
-  "11": `<polygon points="0,0 128,128 0,256" style="fill:#145c8c;stroke:black;stroke-width:1" />
-         <path d="M0,96 v -32 a64,64 30 0,1 0,128 v -40 l 24,24 l 24,-24 l -24,-24 l 24,-24 l -24,-24 l -24,24"
-               fill="#ec359e" stroke="#a95397" stroke-width="1" />`,
-  "12": `<polygon points="0,0 128,128 0,256" style="fill:#ed3da5;stroke:black;stroke-width:1" />
-         <path d="M0,0 m0,32 l 32,32 l -8,8 l 32,32 l 8,-8 l 32,32 l -32,32 l -8,-8 l -32,32 l 8,8 l -32,32"
-               fill="#fdf102" stroke="#edc524" stroke-width="1" />`,
-  "13": `<polygon points="0,0 128,128 0,256" style="fill:#f88826;stroke:black;stroke-width:1" />
-         <path d="M0,96 l 32,-32 v 48 l 32,16 l -32,16 v 48 l -32,-32"
-               style="fill:#864ca4;stroke:#b56844;stroke-width:1" />`,
-  "14": `<polygon points="0,0 128,128 0,256" style="fill:#ac3c6b;stroke:black;stroke-width:1" />
-         <path d="M0,96 l 32,-32 v 48 l 32,16 l -32,16 v 48 l -32,-32"
-               style="fill:#eced29;stroke:#944b53;stroke-width:1" />`,
-  "15": `<polygon points="0,0 128,128 0,256" style="fill:#eded25;stroke:black;stroke-width:1" />
-         <path d="M0,96 l 32,-32 v 48 l 32,16 l -32,16 v 48 l -32,-32"
-               style="fill:#43aee6;stroke:#92ad65;stroke-width:1" />`,
-  "16": `<polygon points="0,0 128,128 0,256" style="fill:#ec35a0;stroke:black;stroke-width:1" />
-         <path d="M0,48 h 16 a64,64 30 0,0 64,64 v 32 a64,64 30 0,0 -64,64 h -16 v -48 a32,32 30 1,0 0,-64"
-               fill="#81d1f0" stroke="#af4f8d" stroke-width="1" />`
+import React from 'react';
+
+const noop = () => null;
+
+const MotifSymbols: Record<string, React.FC<{ size: number }>> = {
+  '00': noop,
+  '01': ({ size }) => <circle cx={size / 2} cy={size / 2} r={size / 4} fill="#f38622" />,
+  '02': ({ size }) => <rect x={size * 0.2} y={size * 0.2} width={size * 0.6} height={size * 0.6} fill="#ee3fa8" />,
+  '03': ({ size }) => <polygon points={`0,0 ${size},${size} 0,${size}`} fill="#eced25" />,
+  '04': ({ size }) => <path d={`M0,${size * 0.25} h${size * 0.5}`} stroke="#265e93" fill="none" />,
+  '05': ({ size }) => <path d={`M0,${size * 0.1} l${size * 0.5},${size * 0.5}`} stroke="#8682bc" fill="none" />,
+  '06': ({ size }) => <polygon points={`0,0 ${size * 0.75},${size * 0.25} ${size / 2},${size}`} fill="#2bb35a" />,
+  '07': ({ size }) => <circle cx={size / 3} cy={size / 2} r={size / 6} fill="#f0ed24" />,
+  '08': ({ size }) => <ellipse cx={size / 2} cy={size / 2} rx={size / 3} ry={size / 4} fill="#80d5f8" />,
+  '09': ({ size }) => <polygon points={`0,0 ${size * 0.75},${size * 0.75} 0,${size}`} fill="#75cff2" />,
+  '0a': ({ size }) => <polygon points={`0,0 ${size * 0.75},${size * 0.75} 0,${size}`} fill="#2bb356" />,
+  '0b': ({ size }) => <path d={`M0,${size * 0.2} a20,20 0 1,1 ${size * 0.1},${size * 0.4}`} stroke="#ee3ea8" fill="none" />,
+  '0c': ({ size }) => <polygon points={`0,0 ${size * 0.5},${size * 0.25} 0,${size}`} fill="#f48614" />,
+  '0d': ({ size }) => <path d={`M0,0 l${size * 0.4},${size * 0.4}`} stroke="#145c8c" fill="none" />,
+  '0e': ({ size }) => <polygon points={`0,0 ${size / 2},${size / 2} ${size / 3},${size}`} fill="#f4892a" />,
+  '0f': ({ size }) => <polygon points={`0,0 ${size * 0.7},${size * 0.7} ${size * 0.3},${size}`} fill="#b6e8f9" />,
+  '10': ({ size }) => <path d={`M0,${size * 0.25} a32,32 0 1,1 0,${size * 0.5}`} stroke="#fef102" fill="none" />,
+  '11': ({ size }) => <path d={`M0,${size * 0.25} l${size / 2},${size / 2}`} stroke="#ec359e" fill="none" />,
+  '12': ({ size }) => <path d={`M0,0 l${size * 0.3},${size * 0.3}`} stroke="#fdf102" fill="none" />,
+  '13': ({ size }) => <path d={`M0,${size / 2} l${size / 3},-${size / 3}`} stroke="#864ca4" fill="none" />,
+  '14': ({ size }) => <path d={`M0,${size / 2} l${size / 3},-${size / 3}`} stroke="#eced29" fill="none" />,
+  '15': ({ size }) => <path d={`M0,${size / 2} l${size / 3},-${size / 3}`} stroke="#43aee6" fill="none" />,
+  '16': ({ size }) => <path d={`M0,${size * 0.25} a64,64 0 0,0 ${size * 0.5},${size * 0.5}`} stroke="#81d1f0" fill="none" />,
+  '17': ({ size }) => <polygon points={`0,0 ${size},${size / 2} 0,${size}`} fill="#123456" />,
+  '18': ({ size }) => <rect x={size * 0.1} y={size * 0.1} width={size * 0.8} height={size * 0.8} fill="#abcdef" />,
 };
 
-export default motifDefinitions;
+export default MotifSymbols;

@@ -4,7 +4,7 @@ import MotifSvg from "./MotifSvg";
 type Props = {
   edges: [string, string, string, string]; // [top, right, bottom, left]
   id: number;
-  motifStyle: 'circle' | 'symbol';
+  motifStyle: 'circle' | 'symbol' | 'svg';
 };
 
 const Piece: React.FC<Props> = ({ edges, id, motifStyle }) => {

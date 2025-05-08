@@ -1,59 +1,65 @@
 import React from 'react';
 import motifDefinitions from '../data/motifDefinitions';
 
+type Direction = 'top' | 'right' | 'bottom' | 'left';
+
 export type MotifSvgProps = {
-  motif: string;
-  size: number;
-  style?: 'svg' | 'symbol' | 'circle';
+  edge: string;
+  direction: Direction;
+  motifStyle: 'circle' | 'symbol' | 'svg';
 };
 
-const MotifSvg: React.FC<MotifSvgProps> = ({ motif, size, style = 'svg' }) => {
-  const definition = motifDefinitions[motif];
+const rotationDegrees: Record<Direction, number> = {
+  top: 0,
+  right: 90,
+  bottom: 180,
+  left: 270,
+};
 
-  if (!definition) {
-    return (
-      <polygon
-        points="0,0 128,128 0,256"
-        fill="#999"
-        stroke="#999"
-        strokeWidth="1"
-      />
-    );
-  }
+const MotifSvg: React.FC<MotifSvgProps> = ({ edge, direction, motifStyle }) => {
+  const rotation = rotationDegrees[direction];
 
-  if (style === 'circle') {
+  if (motifStyle === 'circle') {
     return (
       <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={size / 2.5}
-        fill={definition.fill || '#999'}
+        cx="50"
+        cy="10"
+        r="6"
+        fill="#4f46e5"
+        transform={`rotate(${rotation} 50 50)`}
       />
     );
   }
 
-  if (style === 'symbol') {
-    return <use href={`#${motif}`} />;
+  if (motifStyle === 'symbol') {
+    return (
+      <use
+        href={`#${edge}`}
+        transform={`rotate(${rotation} 50 50)`}
+        x="0"
+        y="0"
+        width="100"
+        height="100"
+      />
+    );
   }
 
-  // default 'svg'
+  // fallback to SVG from motifDefinitions
+  const motif = motifDefinitions[edge];
+  if (!motif) return null;
+
   return (
-    <>
-      <polygon
-        points="0,0 128,128 0,256"
-        fill={definition.fill}
-        stroke="black"
-        strokeWidth="1"
-      />
-      {definition.path && (
+    <g transform={`rotate(${rotation} 50 50)`}>
+      {motif.fill && <circle cx="50" cy="10" r="6" fill={motif.fill} />}
+      {motif.path && (
         <path
-          d={definition.path}
-          fill={definition.pathFill}
-          stroke={definition.pathStroke}
-          strokeWidth={definition.pathStrokeWidth || '1'}
+          d={motif.path}
+          fill={motif.pathFill ?? 'none'}
+          stroke={motif.pathStroke ?? '#000'}
+          strokeWidth={motif.pathStrokeWidth ?? 1}
         />
       )}
-    </>
+    </g>
   );
 };
 

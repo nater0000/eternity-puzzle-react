@@ -1,24 +1,26 @@
-import React from "react";
+import React from 'react';
+import './ControlPanel.css'; // adjust if needed
+import MotifSymbols from './MotifSymbols';
 
-type Props = {
-  motifStyle: 'circle' | 'symbol';
-  setMotifStyle: (style: 'circle' | 'symbol') => void;
-};
+interface ControlPanelProps {
+  motifStyle: string;
+  setMotifStyle: (style: string) => void;
+}
 
-const ControlPanel: React.FC<Props> = ({ motifStyle, setMotifStyle }) => {
+const ControlPanel: React.FC<ControlPanelProps> = ({ motifStyle, setMotifStyle }) => {
   return (
-    <div className="flex items-center gap-4">
-      <label htmlFor="motifStyle" className="text-sm font-medium">
-        Motif Style:
-      </label>
+    <div className="control-panel">
+      <label htmlFor="motif-style">Motif Style:</label>
       <select
-        id="motifStyle"
+        id="motif-style"
         value={motifStyle}
-        onChange={(e) => setMotifStyle(e.target.value as 'circle' | 'symbol')}
-        className="bg-zinc-800 text-white p-1 rounded"
+        onChange={(e) => setMotifStyle(e.target.value)}
       >
-        <option value="circle">🎯 Circle</option>
-        <option value="symbol">🖼 Symbol</option>
+        {Object.keys(MotifSymbols).map((key) => (
+          <option key={key} value={key}>
+            {key.charAt(0).toUpperCase() + key.slice(1)}
+          </option>
+        ))}
       </select>
     </div>
   );
