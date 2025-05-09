@@ -1,12 +1,13 @@
 import React from "react";
 import type { BoardPosition } from "../types/puzzle";
 import Piece from "./Piece";
+import type { MotifStyle } from '../App';
 
 type Props = {
   width: number;
   height: number;
   board: BoardPosition[];
-  motifStyle: 'circle' | 'symbol';
+  motifStyle: MotifStyle;
 };
 
 const PuzzleBoard: React.FC<Props> = ({ width, board, motifStyle }) => {
