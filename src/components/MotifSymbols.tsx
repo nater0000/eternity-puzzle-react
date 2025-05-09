@@ -58,7 +58,7 @@ const colorPairs: Array<[string, string]> = [
 const shapes = ['arc', 'triangle', 'backslash', 'chevron', 'half8'];
 
 const patterns: Record<string, React.FC<SymbolProps>> = {
-  "A": ({ size, background: _, foreground: __ }) => baseShapes.solid({ size }), // Solid gray triangle
+  "A": ({ size }) => baseShapes.solid({ size }), // Solid gray triangle
 };
 
 const letters = 'BCDEFGHIJKLMNOPQRSTUVW'; // 22 entries
