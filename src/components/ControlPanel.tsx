@@ -1,24 +1,32 @@
 import React from 'react';
-import './ControlPanel.css'; // adjust if needed
-import MotifSymbols from './MotifSymbols';
+import type { MotifStyle } from '../App';
 
 interface ControlPanelProps {
-  motifStyle: string;
-  setMotifStyle: (style: string) => void;
+  motifStyle: MotifStyle;
+  setMotifStyle: (style: MotifStyle) => void;
+  motifStyles: MotifStyle[];
 }
 
-const ControlPanel: React.FC<ControlPanelProps> = ({ motifStyle, setMotifStyle }) => {
+const ControlPanel: React.FC<ControlPanelProps> = ({
+  motifStyle,
+  setMotifStyle,
+  motifStyles,
+}) => {
+  const handleStyleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setMotifStyle(event.target.value as MotifStyle);
+  };
+
   return (
     <div className="control-panel">
-      <label htmlFor="motif-style">Motif Style:</label>
+      <label htmlFor="motif-style">Motif Style: </label>
       <select
         id="motif-style"
         value={motifStyle}
-        onChange={(e) => setMotifStyle(e.target.value)}
+        onChange={handleStyleChange}
       >
-        {Object.keys(MotifSymbols).map((key) => (
-          <option key={key} value={key}>
-            {key.charAt(0).toUpperCase() + key.slice(1)}
+        {motifStyles.map((style) => (
+          <option key={style} value={style}>
+            {style}
           </option>
         ))}
       </select>

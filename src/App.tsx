@@ -6,6 +6,8 @@ import ControlPanel from './components/ControlPanel';
 import { loadLegacyPuzzle } from './lib/loadLegacyPuzzle';
 import type { PuzzleBoardData } from './types/puzzle';
 import MotifSymbols from './components/MotifSymbols';
+import MotifSvg from './components/MotifSvg';
+
 
 const App: React.FC = () => {
   const [puzzleData, setPuzzleData] = useState<PuzzleBoardData | null>(null);
@@ -18,7 +20,6 @@ const App: React.FC = () => {
 
   return (
     <>
-      {motifStyle === 'symbol' && <MotifSymbols />}
       <main className="min-h-screen bg-zinc-900 text-white">
         <div className="max-w-7xl mx-auto p-4 space-y-6">
           <Header />
