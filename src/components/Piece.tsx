@@ -19,7 +19,7 @@ const Piece: React.FC<Props> = ({ edges, id, motifStyle }) => {
 
     return (
       <g key={index} transform={getTransform(direction)}>
-        <Component edge={edge} direction={direction} />
+        <Component size={100} />
       </g>
     );
   };
