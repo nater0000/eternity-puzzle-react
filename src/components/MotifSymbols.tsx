@@ -67,7 +67,8 @@ for (let i = 0; i < letters.length; i++) {
   const char = letters[i];
   const shape = shapes[i % shapes.length] as keyof typeof baseShapes;
   const [bg, fg] = colorPairs[i % colorPairs.length];
-  patterns[char] = ({ size }) => baseShapes[shape]({ size, background: bg, foreground: fg });
+  patterns[char] = ({ size, background = bg, foreground = fg }) =>
+    baseShapes[shape]({ size, background, foreground });
 }
 
 export const MotifSymbols = { patterns };
