@@ -9,7 +9,8 @@ interface PiecePaletteProps {
   motifStyle: MotifStyle;
   onDragStart: (id: number) => void;
   onDragEnd: () => void;
-  pieceRotations?: Record<number, number>; // new prop to support preserved rotation
+  onRotatePiece: (id: number, rotation: number) => void;
+  pieceRotations?: Record<number, number>;
 }
 
 const PiecePalette: React.FC<PiecePaletteProps> = ({
@@ -17,29 +18,26 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   motifStyle,
   onDragStart,
   onDragEnd,
+  onRotatePiece,
   pieceRotations = {},
 }) => {
   const unplacedPieces = allPieces.filter((piece) => !placedPieceIds.has(piece.id));
   const [rotations, setRotations] = useState<Record<number, number>>(pieceRotations);
 
-  // keep local rotation in sync with external changes
   useEffect(() => {
     setRotations((prev) => ({ ...pieceRotations, ...prev }));
   }, [pieceRotations]);
 
   const handleLeftClick = (id: number) => {
-    setRotations((prev) => ({
-      ...prev,
-      [id]: ((prev[id] || 0) + 1) % 4,
-    }));
+    const newRotation = ((rotations[id] || 0) + 1) % 4;
+    setRotations((prev) => ({ ...prev, [id]: newRotation }));
+    onRotatePiece(id, newRotation);
   };
 
   const handleRightClick = (e: React.MouseEvent, id: number) => {
     e.preventDefault();
-    setRotations((prev) => ({
-      ...prev,
-      [id]: 0,
-    }));
+    setRotations((prev) => ({ ...prev, [id]: 0 }));
+    onRotatePiece(id, 0);
   };
 
   const handleDragStart = (e: React.DragEvent, id: number, rotation: number) => {
@@ -49,21 +47,18 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   };
 
   return (
-    <div
-      style={{
-        overflowY: "auto",
-        padding: "8px",
-        maxHeight: "100vh",
-        width: "180px",
-        backgroundColor: "#f9f9f9",
-        borderRight: "1px solid #ccc",
-      }}
-    >
+    <div style={{
+      overflowY: "auto",
+      padding: "8px",
+      maxHeight: "100vh",
+      width: "180px",
+      backgroundColor: "#f9f9f9",
+      borderRight: "1px solid #ccc",
+    }}>
       <h3 style={{ marginTop: 0 }}>Piece Palette</h3>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
         {unplacedPieces.map((piece) => {
           const rotation = rotations[piece.id] || 0;
-
           return (
             <div
               key={piece.id}
