@@ -15,6 +15,8 @@ export type BoardPosition = {
   x: number;
   y: number;
   piece: Piece | null;
+  rotation: number; // in degrees or multiples of 90
+  isDragging?: boolean;
 };
 
 export type PuzzleBoardData = {

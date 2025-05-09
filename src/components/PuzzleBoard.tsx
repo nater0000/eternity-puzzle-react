@@ -8,8 +8,9 @@ type Props = {
   height: number;
   board: BoardPosition[];
   motifStyle: MotifStyle;
-  onDropPiece: (index: number, pieceId: string) => void;
+  onDropPiece: (index: number, pieceId: string, rotation: number) => void;
   onRemovePiece: (index: number) => void;
+  onRotatePiece: (index: number) => void;
 };
 
 const PuzzleBoard: React.FC<Props> = ({
@@ -18,12 +19,15 @@ const PuzzleBoard: React.FC<Props> = ({
   motifStyle,
   onDropPiece,
   onRemovePiece,
+  onRotatePiece,
 }) => {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, index: number) => {
     e.preventDefault();
     const pieceId = e.dataTransfer.getData("text/plain");
+    const rotationStr = e.dataTransfer.getData("rotation");
+    const rotation = rotationStr ? parseInt(rotationStr, 10) : 0;
     if (pieceId) {
-      onDropPiece(index, pieceId);
+      onDropPiece(index, pieceId, rotation);
     }
   };
 
@@ -32,8 +36,13 @@ const PuzzleBoard: React.FC<Props> = ({
   };
 
   const handleRightClick = (e: React.MouseEvent, index: number) => {
-    e.preventDefault(); // Prevent browser context menu
+    e.preventDefault();
     onRemovePiece(index);
+  };
+
+  const handleLeftClick = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    onRotatePiece(index);
   };
 
   return (
@@ -47,6 +56,7 @@ const PuzzleBoard: React.FC<Props> = ({
           onDrop={(e) => handleDrop(e, idx)}
           onDragOver={handleDragOver}
           onContextMenu={(e) => handleRightClick(e, idx)}
+          onClick={(e) => handleLeftClick(e, idx)}
           className="aspect-square bg-gray-200 rounded flex items-center justify-center"
         >
           {cell.piece ? (
@@ -54,6 +64,8 @@ const PuzzleBoard: React.FC<Props> = ({
               id={cell.piece.id}
               edges={cell.piece.edges}
               motifStyle={motifStyle}
+              rotation={cell.piece.rotation}
+              isDragging={false}
             />
           ) : (
             <div className="w-full h-full bg-gray-300" />
