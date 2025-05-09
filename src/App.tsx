@@ -26,7 +26,7 @@ const App: React.FC = () => {
           <ControlPanel motifStyle={motifStyle} setMotifStyle={setMotifStyle} motifStyles={[...motifStyles]} />
           <div className="grid md:grid-cols-3 gap-4 items-start">
             {puzzleData ? (
-              <PuzzleBoard {...puzzleData} motifStyle={[...motifStyles]} />
+              <PuzzleBoard {...puzzleData} motifStyle={motifStyle} />
             ) : (
               <div className="md:col-span-2 p-4 border border-red-400 text-red-300 rounded">
                 ⚠️ Failed to load puzzle data from URL.
