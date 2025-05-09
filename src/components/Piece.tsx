@@ -7,7 +7,7 @@ interface Props {
   id: number;
   edges: [string, string, string, string];
   rotation: number;
-//  isDragging: boolean; // keep for future styling if needed
+  isDragging: boolean; // for future styling while dragging pieces
   motifStyle: MotifStyle;
 }
 
