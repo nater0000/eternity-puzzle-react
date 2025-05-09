@@ -1,6 +1,6 @@
 import React from "react";
-import { symbols as svgSymbols } from './MotifSvg';
-import { symbols as symbolSymbols } from './MotifSymbols';
+import { MotifSvg as svgSymbols } from './MotifSvg';
+import { MotifSymbols as symbolSymbols } from './MotifSymbols';
 import type { MotifStyle } from '../App';
 
 
