@@ -81,7 +81,6 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
                 rotation={rotation}
                 isDragging={false}
                 motifStyle={motifStyle}
-                size={48}
               />
             </div>
           );
