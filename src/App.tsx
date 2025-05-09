@@ -24,8 +24,8 @@ const App: React.FC = () => {
         while (loaded.board.length < expectedSize) {
           const index = loaded.board.length;
           loaded.board.push({
-            x: index % width,
-            y: Math.floor(index / width),
+            x: index % loaded.width,
+            y: Math.floor(index / loaded.width),
             piece: null,
             rotation: 0,
           });
