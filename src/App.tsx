@@ -6,7 +6,7 @@ import ControlPanel from './components/ControlPanel';
 import { loadLegacyPuzzle } from './lib/loadLegacyPuzzle';
 import type { PuzzleBoardData } from './types/puzzle';
 
-const motifStyles = ['svg', 'symbol'] as const
+const motifStyles = ['svg', 'symbol'] as const;
 export type MotifStyle = (typeof motifStyles)[number];
 
 const App: React.FC = () => {

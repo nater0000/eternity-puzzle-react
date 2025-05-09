@@ -1,6 +1,8 @@
 import React from "react";
-import MotifSvg from "./MotifSvg";
-import MotifSymbols from "./MotifSymbols";
+import { symbols as svgSymbols } from './MotifSvg';
+import { symbols as symbolSymbols } from './MotifSymbols';
+import type { MotifStyle } from '../App';
+
 
 type Props = {
   edges: [string, string, string, string]; // [top, right, bottom, left]
@@ -12,11 +14,7 @@ type Direction = 'top' | 'right' | 'bottom' | 'left';
 
 const Piece: React.FC<Props> = ({ edges, id, motifStyle }) => {
   const renderMotif = (edge: string, direction: Direction, index: number) => {
-    const Component =
-      motifStyle === 'symbol'
-        ? MotifSymbols.symbols[edge]
-        : MotifSvg.symbols[edge];
-
+    const Component = motifStyle === 'symbol' ? symbolSymbols[edge] : svgSymbols[edge];
     if (!Component) return null;
 
     return (

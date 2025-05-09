@@ -70,8 +70,5 @@ for (let i = 0; i < letters.length; i++) {
   patterns[char] = ({ size }) => baseShapes[shape]({ size, background: bg, foreground: fg });
 }
 
-export const MotifSymbols = {
-  symbols: patterns,
-};
-
+export const MotifSymbols = { patterns };
 export default MotifSymbols;
