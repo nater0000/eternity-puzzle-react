@@ -5,8 +5,6 @@ import PiecePalette from './components/PiecePalette';
 import ControlPanel from './components/ControlPanel';
 import { loadLegacyPuzzle } from './lib/loadLegacyPuzzle';
 import type { PuzzleBoardData } from './types/puzzle';
-import MotifSymbols from './components/MotifSymbols';
-import MotifSvg from './components/MotifSvg';
 
 
 const App: React.FC = () => {
