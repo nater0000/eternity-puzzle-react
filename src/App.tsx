@@ -6,10 +6,12 @@ import ControlPanel from './components/ControlPanel';
 import { loadLegacyPuzzle } from './lib/loadLegacyPuzzle';
 import type { PuzzleBoardData } from './types/puzzle';
 
+const motifStyles = ['svg', 'symbol'] as const;
+export type MotifStyle = (typeof motifStyles)[number];
 
 const App: React.FC = () => {
   const [puzzleData, setPuzzleData] = useState<PuzzleBoardData | null>(null);
-  const [motifStyle, setMotifStyle] = useState<'symbol' | 'svg'>('svg');
+  const [motifStyle, setMotifStyle] = useState<MotifStyle>(motifStyles[0]);
 
   useEffect(() => {
     const loaded = loadLegacyPuzzle();
@@ -21,7 +23,7 @@ const App: React.FC = () => {
       <main className="min-h-screen bg-zinc-900 text-white">
         <div className="max-w-7xl mx-auto p-4 space-y-6">
           <Header />
-          <ControlPanel motifStyle={motifStyle} setMotifStyle={setMotifStyle} />
+          <ControlPanel motifStyle={motifStyle} setMotifStyle={setMotifStyle} motifStyles={motifStyles} />
           <div className="grid md:grid-cols-3 gap-4 items-start">
             {puzzleData ? (
               <PuzzleBoard {...puzzleData} motifStyle={motifStyle} />
