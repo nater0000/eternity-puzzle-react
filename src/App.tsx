@@ -1,98 +1,107 @@
-﻿import React, { useEffect, useState } from 'react';
-import Header from './components/Header';
-import PuzzleBoard from './components/PuzzleBoard';
-import PiecePalette from './components/PiecePalette';
-import ControlPanel from './components/ControlPanel';
-import { loadLegacyPuzzle } from './lib/loadLegacyPuzzle';
-import { PIECES } from './data/pieces';
-import type { PuzzleBoardData, PlacedPiece } from './types/puzzle';
+﻿import React, { useEffect, useState } from "react";
+import PuzzleBoard from "./components/PuzzleBoard";
+import PiecePalette from "./components/PiecePalette";
+import ControlPanel from "./components/ControlPanel";
+import { loadLegacyPuzzle } from "./lib/loadLegacyPuzzle";
+import { PIECES } from "./data/pieces";
+import { BoardPosition } from "./types/puzzle";
 
-const motifStyles = ['svg', 'symbol'] as const;
+export const motifStyles = ['svg', 'symbol'] as const;
 export type MotifStyle = (typeof motifStyles)[number];
 
 const App: React.FC = () => {
-  const [puzzleData, setPuzzleData] = useState<PuzzleBoardData | null>(null);
-  const [motifStyle, setMotifStyle] = useState<MotifStyle>(motifStyles[0]);
-  const [placedPieces, setPlacedPieces] = useState<PlacedPiece[]>([]);
+  const [puzzleData, setPuzzleData] = useState<{
+    board: BoardPosition[];
+    rows: number;
+    cols: number;
+  } | null>(null);
+
+  const [motifStyle, setMotifStyle] = useState<MotifStyle>("svg");
+
   const [rotationMap, setRotationMap] = useState<Record<number, number>>({});
 
   useEffect(() => {
     const loaded = loadLegacyPuzzle();
-    setPuzzleData(loaded);
-    setPlacedPieces(loaded.pieces);
-    const initialRotations: Record<number, number> = {};
-    loaded.pieces.forEach(p => {
-      initialRotations[p.id] = p.rotation ?? 0;
-    });
-    setRotationMap(initialRotations);
+    if (loaded) {
+      setPuzzleData({
+        board: loaded.board,
+        rows: loaded.rows,
+        cols: loaded.cols,
+      });
+
+      const newRotationMap: Record<number, number> = {};
+      loaded.board.forEach((pos) => {
+        if (pos.piece) {
+          newRotationMap[pos.piece.id] = pos.rotation ?? 0;
+        }
+      });
+      setRotationMap(newRotationMap);
+    }
   }, []);
 
-  const allPieceIds = PIECES.map((_, index) => index);
-  const placedIds = placedPieces.map(p => p.id);
-  const unplacedIds = allPieceIds.filter(id => !placedIds.includes(id));
+  const allPieceIds = PIECES.map((_, i) => i);
+  const placedIds = new Set(puzzleData?.board.map((pos) => pos.piece?.id).filter(Boolean) ?? []);
+  const pieceStates = allPieceIds.map((id) => ({
+    id,
+    isPlaced: placedIds.has(id),
+    rotation: rotationMap[id] ?? 0,
+  }));
 
-  const handleDropPiece = (id: number, x: number, y: number, rotation = 0) => {
-    const existing = placedPieces.find(p => p.x === x && p.y === y);
-    if (existing) return; // prevent overwrite
-    setPlacedPieces(prev => [...prev, { id, x, y, rotation }]);
-    setRotationMap(prev => ({ ...prev, [id]: rotation }));
+  const handleDropPiece = (index: number, pieceId: string, rotation: number) => {
+    if (!puzzleData) return;
+    const id = parseInt(pieceId, 10);
+    const pieceData = PIECES[id];
+    const newBoard = [...puzzleData.board];
+    newBoard[index] = {
+      ...newBoard[index],
+      piece: { id, edges: pieceData },
+    };
+    setPuzzleData({ ...puzzleData, board: newBoard });
+
+    setRotationMap((prev) => ({ ...prev, [id]: rotation }));
   };
 
-  const handleRemovePiece = (x: number, y: number) => {
-    const piece = placedPieces.find(p => p.x === x && p.y === y);
+  const handleRemovePiece = (index: number) => {
+    if (!puzzleData) return;
+    const newBoard = [...puzzleData.board];
+    newBoard[index] = { ...newBoard[index], piece: null };
+    setPuzzleData({ ...puzzleData, board: newBoard });
+  };
+
+  const handleRotatePiece = (index: number) => {
+    if (!puzzleData) return;
+    const piece = puzzleData.board[index].piece;
     if (!piece) return;
-    setPlacedPieces(prev => prev.filter(p => !(p.x === x && p.y === y)));
-    // keep rotation in rotationMap
-  };
-
-  const handleRotatePiece = (x: number, y: number) => {
-    setPlacedPieces(prev =>
-      prev.map(p =>
-        p.x === x && p.y === y
-          ? {
-              ...p,
-              rotation: (p.rotation + 1) % 4,
-            }
-          : p
-      )
-    );
+    setRotationMap((prev) => ({
+      ...prev,
+      [piece.id]: ((prev[piece.id] ?? 0) + 90) % 360,
+    }));
   };
 
   return (
-    <main className="min-h-screen bg-zinc-900 text-white">
-      <div className="max-w-7xl mx-auto p-4 space-y-6">
-        <Header />
-        <ControlPanel
+    <div className="flex h-screen">
+      <div className="w-1/4 p-2 overflow-y-auto">
+        <ControlPanel motifStyle={motifStyle} setMotifStyle={setMotifStyle} />
+        <PiecePalette
+          pieceStates={pieceStates}
           motifStyle={motifStyle}
-          setMotifStyle={setMotifStyle}
-          motifStyles={[...motifStyles]}
         />
-        <div className="grid md:grid-cols-3 gap-4 items-start">
-          <div className="md:col-span-2">
-            {puzzleData ? (
-              <PuzzleBoard
-                rows={puzzleData.rows}
-                cols={puzzleData.cols}
-                motifStyle={motifStyle}
-                pieces={placedPieces}
-                onDropPiece={handleDropPiece}
-                onRemovePiece={handleRemovePiece}
-                onRotatePiece={handleRotatePiece}
-              />
-            ) : (
-              <div className="p-4 border border-red-400 text-red-300 rounded">
-                ⚠️ Failed to load puzzle data from URL.
-              </div>
-            )}
-          </div>
-          <PiecePalette
-            unplacedPieceIds={unplacedIds}
+      </div>
+      <div className="w-3/4 flex justify-center items-center">
+        {puzzleData && (
+          <PuzzleBoard
+            width={puzzleData.cols}
+            height={puzzleData.rows}
+            board={puzzleData.board}
             motifStyle={motifStyle}
             rotationMap={rotationMap}
+            onDropPiece={handleDropPiece}
+            onRemovePiece={handleRemovePiece}
+            onRotatePiece={handleRotatePiece}
           />
-        </div>
+        )}
       </div>
-    </main>
+    </div>
   );
 };
 
