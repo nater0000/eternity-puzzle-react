@@ -56,7 +56,14 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
       borderRight: "1px solid #ccc",
     }}>
       <h3 style={{ marginTop: 0 }}>Piece Palette</h3>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+      <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(50px, 1fr))",
+          gap: "8px",
+          padding: "10px",
+          overflowY: "auto",
+          height: "100%",
+      }}>
         {unplacedPieces.map((piece) => {
           const rotation = rotations[piece.id] || 0;
           return (

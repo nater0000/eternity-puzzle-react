@@ -18,6 +18,18 @@ const App: React.FC = () => {
   useEffect(() => {
     const loaded = loadLegacyPuzzle();
     if (loaded) {
+      // Fill board if it's too short
+      if (loaded.board.length < expectedSize) {
+        while (loaded.board.length < expectedSize) {
+          const index = loaded.board.length;
+          loaded.board.push({
+            x: index % width,
+            y: Math.floor(index / width),
+            piece: null,
+            rotation: 0,
+          });
+        }
+      }
       setPuzzleData(loaded);
 
       const placedIds = new Set<number>();
