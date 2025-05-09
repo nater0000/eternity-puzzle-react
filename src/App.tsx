@@ -4,7 +4,7 @@ import PiecePalette from "./components/PiecePalette";
 import PuzzleBoard from "./components/PuzzleBoard";
 import { loadLegacyPuzzle } from "./lib/loadLegacyPuzzle";
 import { allPieces } from "./data/pieces";
-import type { PuzzleBoardData, BoardPosition } from "./types/puzzle";
+import type { PuzzleBoardData } from "./types/puzzle";
 
 const motifStyles = ["svg", "symbol"] as const;
 export type MotifStyle = (typeof motifStyles)[number];
