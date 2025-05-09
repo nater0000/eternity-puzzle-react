@@ -18,6 +18,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const loaded = loadLegacyPuzzle();
     if (loaded) {
+      const expectedSize = loaded.width * loaded.height;
       // Fill board if it's too short
       if (loaded.board.length < expectedSize) {
         while (loaded.board.length < expectedSize) {

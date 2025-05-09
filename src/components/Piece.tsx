@@ -1,22 +1,42 @@
 import React from "react";
-import svgSymbols from './MotifSvg';
-import symbolSymbols from './MotifSymbols';
-import type { MotifStyle } from '../App';
+import svgSymbols from "./MotifSvg";
+import symbolSymbols from "./MotifSymbols";
+import type { MotifStyle } from "../App";
 
 interface Props {
   id: number;
   edges: [string, string, string, string];
   rotation: number;
-  isDragging: boolean; // for future styling while dragging pieces
+  isDragging: boolean;
   motifStyle: MotifStyle;
 }
 
-type Direction = 'top' | 'right' | 'bottom' | 'left';
+type Direction = "top" | "right" | "bottom" | "left";
 
 const Piece: React.FC<Props> = ({ edges, id, motifStyle, rotation }) => {
   const renderMotif = (edge: string, direction: Direction, index: number) => {
-    const Component = motifStyle === 'symbol' ? symbolSymbols[edge] : svgSymbols[edge];
-    if (!Component) return null;
+    const symbolMap = motifStyle === "symbol" ? symbolSymbols : svgSymbols;
+    const Component = symbolMap[edge];
+
+    console.log(
+      `Rendering motif for piece ${id} edge ${index} (${direction})`,
+      {
+        edge,
+        motifStyle,
+        hasComponent: !!Component,
+      }
+    );
+
+    if (!Component) {
+      console.warn(
+        `Missing motif component for edge '${edge}' using style '${motifStyle}'`
+      );
+      return (
+        <g key={index} transform={getTransform(direction)}>
+          <polygon points="0,0 10,0 5,10" fill="red" />
+        </g>
+      );
+    }
 
     return (
       <g key={index} transform={getTransform(direction)}>
@@ -27,14 +47,14 @@ const Piece: React.FC<Props> = ({ edges, id, motifStyle, rotation }) => {
 
   const getTransform = (direction: Direction) => {
     switch (direction) {
-      case 'top':
-        return 'translate(50, 0)';
-      case 'right':
-        return 'translate(100, 50) rotate(90)';
-      case 'bottom':
-        return 'translate(50, 100) rotate(180)';
-      case 'left':
-        return 'translate(0, 50) rotate(-90)';
+      case "top":
+        return "translate(50, 0)";
+      case "right":
+        return "translate(100, 50) rotate(90)";
+      case "bottom":
+        return "translate(50, 100) rotate(180)";
+      case "left":
+        return "translate(0, 50) rotate(-90)";
     }
   };
 
@@ -43,7 +63,7 @@ const Piece: React.FC<Props> = ({ edges, id, motifStyle, rotation }) => {
       viewBox="0 0 100 100"
       className="w-full h-full"
       shapeRendering="geometricPrecision"
-      style={{ transform: `rotate(${rotation}deg)` }} // apply rotation
+      style={{ transform: `rotate(${rotation}deg)` }}
     >
       <rect
         width="100"
