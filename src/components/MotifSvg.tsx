@@ -278,5 +278,5 @@ const motifSvgMap: Record<string, React.FC<MotifComponentProps>> = {
   W: SvgW,
 };
 
-const MotifSvg = { motifSvgMap };
+const MotifSvg = motifSvgMap;
 export default MotifSvg;
