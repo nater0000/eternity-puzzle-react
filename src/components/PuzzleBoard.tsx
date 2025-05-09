@@ -8,6 +8,7 @@ type Props = {
   height: number;
   board: BoardPosition[];
   motifStyle: MotifStyle;
+  rotationMap: Record<string, number>;
   onDropPiece: (index: number, pieceId: string, rotation: number) => void;
   onRemovePiece: (index: number) => void;
   onRotatePiece: (index: number) => void;
@@ -17,6 +18,7 @@ const PuzzleBoard: React.FC<Props> = ({
   width,
   board,
   motifStyle,
+  rotationMap,
   onDropPiece,
   onRemovePiece,
   onRotatePiece,
@@ -64,7 +66,7 @@ const PuzzleBoard: React.FC<Props> = ({
               id={cell.piece.id}
               edges={cell.piece.edges}
               motifStyle={motifStyle}
-              rotation={rotation}
+              rotation={rotationMap[cell.piece.id] ?? 0}
               isDragging={false}
             />
           ) : (
