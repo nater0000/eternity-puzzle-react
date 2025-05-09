@@ -49,21 +49,20 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   return (
     <div style={{
       overflowY: "auto",
-      padding: "8px",
-      maxHeight: "100vh",
+      height: "100vh",
       width: "180px",
       backgroundColor: "#f9f9f9",
       borderRight: "1px solid #ccc",
+      padding: "8px",
     }}>
       <h3 style={{ marginTop: 0 }}>Piece Palette</h3>
-      <div style={{
+      <div
+        style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(50px, 1fr))",
-          gap: "8px",
-          padding: "10px",
-          overflowY: "auto",
-          height: "100%",
-      }}>
+          gridTemplateColumns: "repeat(auto-fill, minmax(48px, 1fr))",
+          gap: "4px",
+        }}
+      >
         {unplacedPieces.map((piece) => {
           const rotation = rotations[piece.id] || 0;
           return (
@@ -82,6 +81,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
                 rotation={rotation}
                 isDragging={false}
                 motifStyle={motifStyle}
+                size={48}
               />
             </div>
           );

@@ -71,7 +71,7 @@ const PuzzleBoard: React.FC<Props> = ({
               isDragging={false}
             />
           ) : (
-            <div className="w-full h-full bg-gray-300" />
+            <div className="w-full h-full bg-gray-300 border border-gray-400 rounded" />
           )}
         </div>
       ))}

@@ -15,6 +15,7 @@ type Direction = "top" | "right" | "bottom" | "left";
 
 const Piece: React.FC<Props> = ({ edges, id, motifStyle, rotation }) => {
   const renderMotif = (edge: string, direction: Direction, index: number) => {
+    edge = edge.toUpperCase();
     const symbolMap = motifStyle === "symbol" ? symbolSymbols : svgSymbols;
     const Component = symbolMap[edge];
 
