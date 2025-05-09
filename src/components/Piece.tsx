@@ -3,19 +3,17 @@ import svgSymbols from './MotifSvg';
 import symbolSymbols from './MotifSymbols';
 import type { MotifStyle } from '../App';
 
-
 interface Props {
   id: number;
   edges: [string, string, string, string];
   rotation: number;
-  isDragging: boolean;
+//  isDragging: boolean; // keep for future styling if needed
   motifStyle: MotifStyle;
 }
 
-
 type Direction = 'top' | 'right' | 'bottom' | 'left';
 
-const Piece: React.FC<Props> = ({ edges, id, motifStyle }) => {
+const Piece: React.FC<Props> = ({ edges, id, motifStyle, rotation }) => {
   const renderMotif = (edge: string, direction: Direction, index: number) => {
     const Component = motifStyle === 'symbol' ? symbolSymbols[edge] : svgSymbols[edge];
     if (!Component) return null;
@@ -45,6 +43,7 @@ const Piece: React.FC<Props> = ({ edges, id, motifStyle }) => {
       viewBox="0 0 100 100"
       className="w-full h-full"
       shapeRendering="geometricPrecision"
+      style={{ transform: `rotate(${rotation}deg)` }} // apply rotation
     >
       <rect
         width="100"
