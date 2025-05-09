@@ -2,8 +2,8 @@ import React from 'react';
 
 interface SymbolProps {
   size: number;
-  background: string;
-  foreground: string;
+  background?: string;
+  foreground?: string;
 }
 
 const baseShapes: Record<string, React.FC<SymbolProps>> = {
