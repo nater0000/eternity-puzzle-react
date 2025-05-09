@@ -4,7 +4,7 @@ import PiecePalette from "./components/PiecePalette";
 import ControlPanel from "./components/ControlPanel";
 import { loadLegacyPuzzle } from "./lib/loadLegacyPuzzle";
 import { PIECES } from "./data/pieces";
-import { BoardPosition } from "./types/puzzle";
+import type { BoardPosition } from "./types/puzzle";
 
 export const motifStyles = ['svg', 'symbol'] as const;
 export type MotifStyle = (typeof motifStyles)[number];
@@ -25,8 +25,8 @@ const App: React.FC = () => {
     if (loaded) {
       setPuzzleData({
         board: loaded.board,
-        rows: loaded.rows,
-        cols: loaded.cols,
+        rows: loaded.height,
+        cols: loaded.width,
       });
 
       const newRotationMap: Record<number, number> = {};
@@ -81,7 +81,7 @@ const App: React.FC = () => {
   return (
     <div className="flex h-screen">
       <div className="w-1/4 p-2 overflow-y-auto">
-        <ControlPanel motifStyle={motifStyle} setMotifStyle={setMotifStyle} />
+        <ControlPanel motifStyle={motifStyle} setMotifStyle={setMotifStyle} motifStyles={motifStyles} />
         <PiecePalette
           pieceStates={pieceStates}
           motifStyle={motifStyle}
