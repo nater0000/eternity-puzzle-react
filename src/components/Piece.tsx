@@ -5,22 +5,38 @@ import MotifSymbols from "./MotifSymbols";
 type Props = {
   edges: [string, string, string, string]; // [top, right, bottom, left]
   id: number;
-  motifStyle: 'symbol' | 'svg';
+  motifStyle: MotifStyle;
 };
 
+type Direction = 'top' | 'right' | 'bottom' | 'left';
+
 const Piece: React.FC<Props> = ({ edges, id, motifStyle }) => {
-  const renderMotif = (
-    edge: string,
-    direction: 'top' | 'right' | 'bottom' | 'left',
-    index: number
-  ) => {
-    const commonProps = { edge, direction, key: index };
-    if (motifStyle === 'symbol') {
-      return <MotifSymbols {...commonProps} />;
-    } else if (motifStyle === 'svg') {
-      return <MotifSvg {...commonProps} />;
+  const renderMotif = (edge: string, direction: Direction, index: number) => {
+    const Component =
+      motifStyle === 'symbol'
+        ? MotifSymbols.symbols[edge]
+        : MotifSvg.symbols[edge];
+
+    if (!Component) return null;
+
+    return (
+      <g key={index} transform={getTransform(direction)}>
+        <Component edge={edge} direction={direction} />
+      </g>
+    );
+  };
+
+  const getTransform = (direction: Direction) => {
+    switch (direction) {
+      case 'top':
+        return 'translate(50, 0)';
+      case 'right':
+        return 'translate(100, 50) rotate(90)';
+      case 'bottom':
+        return 'translate(50, 100) rotate(180)';
+      case 'left':
+        return 'translate(0, 50) rotate(-90)';
     }
-    return null;
   };
 
   return (
@@ -38,7 +54,7 @@ const Piece: React.FC<Props> = ({ edges, id, motifStyle }) => {
         strokeWidth="2"
       />
       {edges.map((edge, i) =>
-        renderMotif(edge, ["top", "right", "bottom", "left"][i] as any, i)
+        renderMotif(edge, ["top", "right", "bottom", "left"][i] as Direction, i)
       )}
       <text
         x="50"
