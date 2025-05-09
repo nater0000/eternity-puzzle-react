@@ -14,26 +14,48 @@ const App: React.FC = () => {
   const [puzzleData, setPuzzleData] = useState<PuzzleBoardData | null>(null);
   const [motifStyle, setMotifStyle] = useState<MotifStyle>(motifStyles[0]);
   const [placedPieces, setPlacedPieces] = useState<PlacedPiece[]>([]);
+  const [rotationMap, setRotationMap] = useState<Record<number, number>>({});
 
   useEffect(() => {
     const loaded = loadLegacyPuzzle();
     setPuzzleData(loaded);
     setPlacedPieces(loaded.pieces);
+    const initialRotations: Record<number, number> = {};
+    loaded.pieces.forEach(p => {
+      initialRotations[p.id] = p.rotation ?? 0;
+    });
+    setRotationMap(initialRotations);
   }, []);
 
   const allPieceIds = PIECES.map((_, index) => index);
-
   const placedIds = placedPieces.map(p => p.id);
   const unplacedIds = allPieceIds.filter(id => !placedIds.includes(id));
 
-  const handleDropPiece = (id: number, x: number, y: number) => {
+  const handleDropPiece = (id: number, x: number, y: number, rotation = 0) => {
     const existing = placedPieces.find(p => p.x === x && p.y === y);
     if (existing) return; // prevent overwrite
-    setPlacedPieces(prev => [...prev, { id, x, y, rotation: 0 }]);
+    setPlacedPieces(prev => [...prev, { id, x, y, rotation }]);
+    setRotationMap(prev => ({ ...prev, [id]: rotation }));
   };
 
   const handleRemovePiece = (x: number, y: number) => {
+    const piece = placedPieces.find(p => p.x === x && p.y === y);
+    if (!piece) return;
     setPlacedPieces(prev => prev.filter(p => !(p.x === x && p.y === y)));
+    // keep rotation in rotationMap
+  };
+
+  const handleRotatePiece = (x: number, y: number) => {
+    setPlacedPieces(prev =>
+      prev.map(p =>
+        p.x === x && p.y === y
+          ? {
+              ...p,
+              rotation: (p.rotation + 1) % 4,
+            }
+          : p
+      )
+    );
   };
 
   return (
@@ -55,6 +77,7 @@ const App: React.FC = () => {
                 pieces={placedPieces}
                 onDropPiece={handleDropPiece}
                 onRemovePiece={handleRemovePiece}
+                onRotatePiece={handleRotatePiece}
               />
             ) : (
               <div className="p-4 border border-red-400 text-red-300 rounded">
@@ -65,6 +88,7 @@ const App: React.FC = () => {
           <PiecePalette
             unplacedPieceIds={unplacedIds}
             motifStyle={motifStyle}
+            rotationMap={rotationMap}
           />
         </div>
       </div>

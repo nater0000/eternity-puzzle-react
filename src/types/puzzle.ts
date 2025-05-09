@@ -4,6 +4,7 @@ export type PuzzlePiece = {
   id: number;
   edges: [string, string, string, string];
   motif: string;
+  rotation: number;
 };
 
 export type Piece = {
