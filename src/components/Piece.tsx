@@ -4,11 +4,14 @@ import symbolSymbols from './MotifSymbols';
 import type { MotifStyle } from '../App';
 
 
-type Props = {
-  edges: [string, string, string, string]; // [top, right, bottom, left]
+interface Props {
   id: number;
+  edges: [string, string, string, string];
+  rotation: number;
+  isDragging: boolean;
   motifStyle: MotifStyle;
-};
+}
+
 
 type Direction = 'top' | 'right' | 'bottom' | 'left';
 
