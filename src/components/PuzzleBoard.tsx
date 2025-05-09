@@ -64,7 +64,7 @@ const PuzzleBoard: React.FC<Props> = ({
               id={cell.piece.id}
               edges={cell.piece.edges}
               motifStyle={motifStyle}
-              rotation={cell.piece.rotation}
+              rotation={rotation}
               isDragging={false}
             />
           ) : (
