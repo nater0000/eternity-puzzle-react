@@ -4,7 +4,7 @@ import PiecePalette from "./components/PiecePalette";
 import PuzzleBoard from "./components/PuzzleBoard";
 import { loadLegacyPuzzle } from "./lib/loadLegacyPuzzle";
 import { allPieces } from "./data/pieces";
-import type { PuzzleBoardData } from "./types/puzzle";
+import type { PuzzleBoardData, BoardPosition } from "./types/puzzle";
 
 const motifStyles = ["svg", "symbol"] as const;
 export type MotifStyle = (typeof motifStyles)[number];
@@ -19,6 +19,7 @@ const App: React.FC = () => {
     const loaded = loadLegacyPuzzle();
     if (loaded) {
       setPuzzleData(loaded);
+
       const placedIds = new Set<number>();
       const rotationMap: Record<number, number> = {};
 
@@ -34,13 +35,16 @@ const App: React.FC = () => {
     }
   }, []);
 
-  const handleDropPiece = (id: number, x: number, y: number, rotation: number = 0) => {
+  const handleDropPiece = (index: number, pieceId: number, rotation: number = 0) => {
     if (!puzzleData) return;
-    const piece = allPieces.find(p => p.id === id);
+
+    const piece = allPieces.find((p) => p.id === pieceId);
     if (!piece) return;
 
+    const x = index % puzzleData.width;
+    const y = Math.floor(index / puzzleData.width);
+
     const updatedBoard = [...puzzleData.board];
-    const index = puzzleData.width * y + x;
     updatedBoard[index] = {
       x,
       y,
@@ -49,19 +53,19 @@ const App: React.FC = () => {
     };
 
     const updatedPlaced = new Set(placedPieceIds);
-    updatedPlaced.add(id);
+    updatedPlaced.add(pieceId);
 
-    const updatedRotations = { ...pieceRotations, [id]: rotation };
+    const updatedRotations = { ...pieceRotations, [pieceId]: rotation };
 
     setPuzzleData({ ...puzzleData, board: updatedBoard });
     setPlacedPieceIds(updatedPlaced);
     setPieceRotations(updatedRotations);
   };
 
-  const handleRemovePiece = (x: number, y: number) => {
+  const handleRemovePiece = (index: number) => {
     if (!puzzleData) return;
+
     const updatedBoard = [...puzzleData.board];
-    const index = puzzleData.width * y + x;
     const removedPiece = updatedBoard[index].piece;
     updatedBoard[index] = {
       ...updatedBoard[index],
@@ -81,8 +85,19 @@ const App: React.FC = () => {
     setPieceRotations(updatedRotations);
   };
 
-  const handleRotatePiece = (id: number, rotation: number) => {
-    setPieceRotations(prev => ({ ...prev, [id]: rotation }));
+  const handleRotatePiece = (index: number) => {
+    if (!puzzleData) return;
+    const pos = puzzleData.board[index];
+    if (!pos.piece) return;
+
+    const id = pos.piece.id;
+    const prevRotation = pieceRotations[id] ?? 0;
+    const newRotation = (prevRotation + 1) % 4;
+
+    setPieceRotations((prev) => ({
+      ...prev,
+      [id]: newRotation,
+    }));
   };
 
   if (!puzzleData) {
@@ -101,6 +116,7 @@ const App: React.FC = () => {
         height={puzzleData.height}
         board={puzzleData.board}
         motifStyle={motifStyle}
+        rotationMap={pieceRotations}
         onDropPiece={handleDropPiece}
         onRemovePiece={handleRemovePiece}
         onRotatePiece={handleRotatePiece}
@@ -110,7 +126,9 @@ const App: React.FC = () => {
         motifStyle={motifStyle}
         onDragStart={() => {}}
         onDragEnd={() => {}}
-        onRotatePiece={handleRotatePiece}
+        onRotatePiece={(id, rotation) =>
+          setPieceRotations((prev) => ({ ...prev, [id]: rotation }))
+        }
         pieceRotations={pieceRotations}
       />
     </div>

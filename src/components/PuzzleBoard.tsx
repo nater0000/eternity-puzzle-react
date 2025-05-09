@@ -8,8 +8,8 @@ type Props = {
   height: number;
   board: BoardPosition[];
   motifStyle: MotifStyle;
-  rotationMap: Record<string, number>;
-  onDropPiece: (index: number, pieceId: string, rotation: number) => void;
+  rotationMap: Record<number, number>;
+  onDropPiece: (index: number, pieceId: number, rotation: number) => void;
   onRemovePiece: (index: number) => void;
   onRotatePiece: (index: number) => void;
 };
@@ -25,10 +25,11 @@ const PuzzleBoard: React.FC<Props> = ({
 }) => {
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, index: number) => {
     e.preventDefault();
-    const pieceId = e.dataTransfer.getData("text/plain");
+    const pieceIdStr = e.dataTransfer.getData("pieceId");
+    const pieceId = parseInt(pieceIdStr, 10);
     const rotationStr = e.dataTransfer.getData("rotation");
     const rotation = rotationStr ? parseInt(rotationStr, 10) : 0;
-    if (pieceId) {
+    if (!isNaN(pieceId)) {
       onDropPiece(index, pieceId, rotation);
     }
   };
