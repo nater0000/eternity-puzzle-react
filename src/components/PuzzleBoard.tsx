@@ -25,7 +25,7 @@ const PuzzleBoard: React.FC<Props> = ({
   onRotatePiece,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [tileSize, setTileSize] = useState(48);
+  const [tileSize, setTileSize] = useState(64);
 
   const updateTileSize = () => {
     const padding = 24;
@@ -42,13 +42,18 @@ const PuzzleBoard: React.FC<Props> = ({
   };
 
   useEffect(() => {
-    updateTileSize();
     const resizeObserver = new ResizeObserver(updateTileSize);
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
+    const container = containerRef.current;
+  
+    // Delay initial size calculation to allow layout to stabilize
+    requestAnimationFrame(() => {
+      updateTileSize();
+      if (container) resizeObserver.observe(container);
+    });
+  
     return () => resizeObserver.disconnect();
   }, [width, height]);
+  
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, index: number) => {
     e.preventDefault();
