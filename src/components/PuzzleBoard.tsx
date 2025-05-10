@@ -28,29 +28,28 @@ const PuzzleBoard: React.FC<Props> = ({
   const [tileSize, setTileSize] = useState(48);
 
   const updateTileSize = () => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    const padding = 24;
 
-    const { clientWidth, clientHeight } = containerRef.current;
+    let availableWidth = window.innerWidth - padding;
+    let availableHeight = window.innerHeight - padding;
 
-    const padding = 16;
-    const availableWidth = clientWidth - padding;
-    const availableHeight = clientHeight - padding;
+    if (container) {
+      availableWidth = container.clientWidth - padding;
+      availableHeight = container.clientHeight - padding;
+    }
 
     const maxTileWidth = availableWidth / width;
     const maxTileHeight = availableHeight / height;
-    const size = Math.floor(Math.min(maxTileWidth, maxTileHeight));
 
-    setTileSize(Math.max(24, size));
+    const size = Math.floor(Math.min(maxTileWidth, maxTileHeight));
+    setTileSize(Math.max(24, size)); // Don't allow tiles smaller than 24px
   };
 
   useEffect(() => {
-    const resizeWithFrame = () => {
-      requestAnimationFrame(() => updateTileSize());
-    };
-
-    resizeWithFrame();
-    window.addEventListener("resize", resizeWithFrame);
-    return () => window.removeEventListener("resize", resizeWithFrame);
+    updateTileSize();
+    window.addEventListener("resize", updateTileSize);
+    return () => window.removeEventListener("resize", updateTileSize);
   }, [width, height]);
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, index: number) => {
@@ -82,7 +81,11 @@ const PuzzleBoard: React.FC<Props> = ({
     <div className="flex-grow flex justify-center items-center overflow-hidden">
       <div
         ref={containerRef}
-        className="w-full h-full max-w-[100vw] max-h-[100vh] p-2 flex justify-center items-center"
+        className="w-full h-full flex justify-center items-center"
+        style={{
+          minWidth: "80vw",
+          minHeight: "80vh",
+        }}
       >
         <div
           className="grid gap-[2px]"
