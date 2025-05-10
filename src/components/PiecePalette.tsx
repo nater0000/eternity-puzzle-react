@@ -1,5 +1,4 @@
-// PiecePalette.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { allPieces } from "../data/pieces";
 import Piece from "./Piece";
 import type { MotifStyle } from "../App";
@@ -13,6 +12,9 @@ interface PiecePaletteProps {
   pieceRotations?: Record<number, number>;
 }
 
+const MIN_WIDTH = 200;
+const MIN_HEIGHT = 150;
+
 const PiecePalette: React.FC<PiecePaletteProps> = ({
   placedPieceIds,
   motifStyle,
@@ -25,6 +27,10 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   const [rotations, setRotations] = useState<Record<number, number>>(pieceRotations);
   const [isVisible, setIsVisible] = useState(true);
   const [dimensions, setDimensions] = useState({ width: 300, height: window.innerHeight / 2 });
+  const [position, setPosition] = useState({ top: window.innerHeight / 2, left: window.innerWidth - 320 });
+
+  const paletteRef = useRef<HTMLDivElement>(null);
+  const dragOffset = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     setRotations((prev) => ({ ...pieceRotations, ...prev }));
@@ -49,15 +55,37 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   };
 
   const handleResize = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const startX = e.clientX;
     const startY = e.clientY;
     const startWidth = dimensions.width;
     const startHeight = dimensions.height;
 
     const onMouseMove = (moveEvent: MouseEvent) => {
-      setDimensions({
-        width: Math.max(200, startWidth + moveEvent.clientX - startX),
-        height: Math.max(150, startHeight + moveEvent.clientY - startY),
+      const newWidth = Math.max(MIN_WIDTH, startWidth + moveEvent.clientX - startX);
+      const newHeight = Math.max(MIN_HEIGHT, startHeight + moveEvent.clientY - startY);
+      setDimensions({ width: newWidth, height: newHeight });
+    };
+
+    const onMouseUp = () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  };
+
+  const handleMoveStart = (e: React.MouseEvent) => {
+    dragOffset.current = {
+      x: e.clientX - position.left,
+      y: e.clientY - position.top,
+    };
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      setPosition({
+        top: Math.max(0, moveEvent.clientY - dragOffset.current.y),
+        left: Math.max(0, moveEvent.clientX - dragOffset.current.x),
       });
     };
 
@@ -76,6 +104,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
         onClick={() => {
           setIsVisible(true);
           setDimensions({ width: 300, height: window.innerHeight / 2 });
+          setPosition({ top: window.innerHeight / 2, left: window.innerWidth - 320 });
         }}
         style={{
           position: "absolute",
@@ -91,65 +120,86 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
 
   return (
     <div
+      ref={paletteRef}
       style={{
         position: "absolute",
-        bottom: "20px",
-        right: "20px",
+        top: position.top,
+        left: position.left,
         width: dimensions.width,
         height: dimensions.height,
         backgroundColor: "#f9f9f9",
         border: "1px solid #ccc",
-        padding: "8px",
-        resize: "both",
-        overflow: "auto",
+        display: "flex",
+        flexDirection: "column",
         zIndex: 1000,
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h3 style={{ margin: 0 }}>Piece Palette</h3>
-        <button onClick={() => setIsVisible(false)} style={{ marginLeft: "auto" }}>
-          ×
-        </button>
-      </div>
+      {/* Title Bar */}
       <div
+        onMouseDown={handleMoveStart}
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(48px, 1fr))",
-          gap: "4px",
-          marginTop: "8px",
+          cursor: "move",
+          backgroundColor: "#ddd",
+          padding: "4px 8px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          userSelect: "none",
         }}
       >
-        {unplacedPieces.map((piece) => {
-          const rotation = rotations[piece.id] || 0;
-          return (
-            <div
-              key={piece.id}
-              draggable
-              onDragStart={(e) => handleDragStart(e, piece.id, rotation)}
-              onDragEnd={onDragEnd}
-              onClick={() => handleLeftClick(piece.id)}
-              onContextMenu={(e) => handleRightClick(e, piece.id)}
-              style={{ cursor: "grab" }}
-            >
-              <Piece
-                id={piece.id}
-                edges={piece.edges}
-                rotation={rotation}
-                isDragging={false}
-                motifStyle={motifStyle}
-              />
-            </div>
-          );
-        })}
+        <span style={{ fontWeight: "bold" }}>Piece Palette</span>
+        <button onClick={() => setIsVisible(false)}>×</button>
       </div>
+
+      {/* Pieces Grid */}
+      <div
+        style={{
+          flexGrow: 1,
+          overflow: "auto",
+          padding: "6px",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(48px, 1fr))",
+            gap: "6px",
+          }}
+        >
+          {unplacedPieces.map((piece) => {
+            const rotation = rotations[piece.id] || 0;
+            return (
+              <div
+                key={piece.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, piece.id, rotation)}
+                onDragEnd={onDragEnd}
+                onClick={() => handleLeftClick(piece.id)}
+                onContextMenu={(e) => handleRightClick(e, piece.id)}
+                style={{ cursor: "grab" }}
+              >
+                <Piece
+                  id={piece.id}
+                  edges={piece.edges}
+                  rotation={rotation}
+                  isDragging={false}
+                  motifStyle={motifStyle}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Resize Handle */}
       <div
         onMouseDown={handleResize}
         style={{
           position: "absolute",
           right: 0,
           bottom: 0,
-          width: "10px",
-          height: "10px",
+          width: "12px",
+          height: "12px",
           cursor: "nwse-resize",
           backgroundColor: "#ccc",
         }}
