@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { BoardPosition } from "../types/puzzle";
+import type { BoardPosition } from "../types/puzzle";
 import Piece from "./Piece";
 import type { MotifStyle } from "../App";
 
@@ -8,7 +8,6 @@ interface PuzzleBoardProps {
   rows: number;
   cols: number;
   motifStyle: MotifStyle;
-  placedPieceIds: Set<number>;
   pieceRotations: Record<number, number>;
   onDropPiece: (id: number, x: number, y: number, rotation?: number) => void;
   onRemovePiece: (id: number) => void;
@@ -20,7 +19,6 @@ const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
   rows,
   cols,
   motifStyle,
-  placedPieceIds,
   pieceRotations,
   onDropPiece,
   onRemovePiece,
@@ -40,7 +38,7 @@ const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
       }
     };
 
-    // Defer first calculation until after render
+    // Initial update after render
     requestAnimationFrame(updateTileSize);
 
     const resizeObserver = new ResizeObserver(updateTileSize);
@@ -111,7 +109,7 @@ const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                   onClick={() =>
                     onRotatePiece(piece.id, ((pieceRotations[piece.id] ?? 0) + 1) % 4)
                   }
-                  onContextMenu={(e) => {
+                  onContextMenu={(e: React.MouseEvent) => {
                     e.preventDefault();
                     onRemovePiece(piece.id);
                   }}
