@@ -32,8 +32,14 @@ const PuzzleBoard: React.FC<Props> = ({
     const updateTileSize = () => {
       if (!containerRef.current) return;
       const { clientWidth, clientHeight } = containerRef.current;
-      const maxTileWidth = clientWidth / width;
-      const maxTileHeight = clientHeight / height;
+
+      // Apply a small padding (e.g., 8px around entire board)
+      const availableWidth = clientWidth - 16;
+      const availableHeight = clientHeight - 16;
+
+      const maxTileWidth = availableWidth / width;
+      const maxTileHeight = availableHeight / height;
+
       const size = Math.floor(Math.min(maxTileWidth, maxTileHeight));
       setTileSize(Math.max(24, size));
     };
@@ -72,7 +78,7 @@ const PuzzleBoard: React.FC<Props> = ({
     <div className="flex-grow flex justify-center items-center p-2 overflow-hidden">
       <div
         ref={containerRef}
-        className="w-full h-full max-w-[100vw] max-h-[100vh] flex items-center justify-center"
+        className="w-full h-full flex items-center justify-center"
       >
         <div
           className="grid gap-[2px]"
