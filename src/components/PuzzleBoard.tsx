@@ -108,7 +108,6 @@ const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                   rotation={pieceRotations[piece.id] ?? 0}
                   isDragging={false}
                   motifStyle={motifStyle}
-                  size={tileSize}
                   onClick={() =>
                     onRotatePiece(piece.id, ((pieceRotations[piece.id] ?? 0) + 1) % 4)
                   }
