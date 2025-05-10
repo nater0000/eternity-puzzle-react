@@ -47,7 +47,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   useEffect(() => {
     const handleResize = () => {
       setPosition((pos) => ({
-        top: Math.min(Math.max(MARGIN_TOP, pos.top), window.innerHeight - MIN_HEIGHT - MARGIN_BOTTOM),
+        top: Math.min(Math.max(MARGIN_TOP, pos.top), window.innerHeight - 40),
         left: Math.min(Math.max(MARGIN_RIGHT, pos.left), window.innerWidth - MIN_WIDTH - MARGIN_RIGHT),
       }));
     };
@@ -106,13 +106,16 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
       const proposedLeft = moveEvent.clientX - dragOffset.current.x;
       const proposedTop = moveEvent.clientY - dragOffset.current.y;
 
-      const newLeft = Math.min(window.innerWidth - MIN_WIDTH - MARGIN_RIGHT, Math.max(MARGIN_RIGHT, proposedLeft));
-      const newTop = Math.min(
-        window.innerHeight - 40, // Make sure title bar stays visible
+      const clampedTop = Math.min(
+        window.innerHeight - 40, // keep title bar in view
         Math.max(MARGIN_TOP, proposedTop)
       );
+      const clampedLeft = Math.min(
+        window.innerWidth - MIN_WIDTH - MARGIN_RIGHT,
+        Math.max(MARGIN_RIGHT, proposedLeft)
+      );
 
-      setPosition({ top: newTop, left: newLeft });
+      setPosition({ top: clampedTop, left: clampedLeft });
     };
 
     const onMouseUp = () => {
@@ -129,11 +132,11 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
       <button
         onClick={() => {
           setIsVisible(true);
-          setDimensions({ width: initialWidth, height: initialHeight });
-          setPosition({
-            top: Math.max(MARGIN_TOP, window.innerHeight - initialHeight - MARGIN_BOTTOM),
-            left: initialLeft,
-          });
+          const height = Math.min(window.innerHeight / 2, window.innerHeight - 50);
+          const top = Math.max(MARGIN_TOP, window.innerHeight - height - MARGIN_BOTTOM);
+          const left = Math.max(MARGIN_RIGHT, window.innerWidth - initialWidth - MARGIN_RIGHT);
+          setDimensions({ width: initialWidth, height });
+          setPosition({ top, left });
         }}
         style={{
           position: "fixed",
