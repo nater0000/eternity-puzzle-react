@@ -14,6 +14,8 @@ interface PiecePaletteProps {
 
 const MIN_WIDTH = 200;
 const MIN_HEIGHT = 150;
+const MIN_TOP = 8;
+const PADDING_BOTTOM = 8;
 
 const PiecePalette: React.FC<PiecePaletteProps> = ({
   placedPieceIds,
@@ -29,7 +31,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
 
   const initialWidth = 300;
   const initialHeight = Math.min(window.innerHeight / 2, window.innerHeight - 100);
-  const initialTop = Math.max(8, window.innerHeight - initialHeight - 12);
+  const initialTop = Math.max(MIN_TOP, window.innerHeight - initialHeight - PADDING_BOTTOM);
   const initialLeft = Math.max(8, window.innerWidth - initialWidth - 8);
 
   const [dimensions, setDimensions] = useState({ width: initialWidth, height: initialHeight });
@@ -44,7 +46,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   useEffect(() => {
     const handleResize = () => {
       setPosition((pos) => ({
-        top: Math.min(Math.max(0, pos.top), window.innerHeight - MIN_HEIGHT),
+        top: Math.min(Math.max(MIN_TOP, pos.top), window.innerHeight - MIN_HEIGHT),
         left: Math.min(Math.max(0, pos.left), window.innerWidth - MIN_WIDTH),
       }));
     };
@@ -105,7 +107,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
       );
       const newTop = Math.min(
         window.innerHeight - MIN_HEIGHT,
-        Math.max(0, moveEvent.clientY - dragOffset.current.y)
+        Math.max(MIN_TOP, moveEvent.clientY - dragOffset.current.y)
       );
       setPosition({ top: newTop, left: newLeft });
     };
