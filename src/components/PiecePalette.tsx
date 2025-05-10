@@ -31,7 +31,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   const [isVisible, setIsVisible] = useState(true);
 
   const initialWidth = 300;
-  const initialHeight = Math.min(window.innerHeight / 2, window.innerHeight - 100);
+  const initialHeight = Math.min(window.innerHeight / 2, window.innerHeight - 50);
   const initialTop = Math.max(MARGIN_TOP, window.innerHeight - initialHeight - MARGIN_BOTTOM);
   const initialLeft = Math.max(MARGIN_RIGHT, window.innerWidth - initialWidth - MARGIN_RIGHT);
 
@@ -108,7 +108,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
 
       const newLeft = Math.min(window.innerWidth - MIN_WIDTH - MARGIN_RIGHT, Math.max(MARGIN_RIGHT, proposedLeft));
       const newTop = Math.min(
-        window.innerHeight - MIN_HEIGHT - MARGIN_BOTTOM,
+        window.innerHeight - 40, // Make sure title bar stays visible
         Math.max(MARGIN_TOP, proposedTop)
       );
 
