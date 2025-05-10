@@ -1,3 +1,4 @@
+// PuzzleBoard.tsx
 import React from "react";
 import type { BoardPosition } from "../types/puzzle";
 import Piece from "./Piece";
@@ -54,7 +55,7 @@ const PuzzleBoard: React.FC<Props> = ({
       <div
         className="grid gap-[2px] w-full max-w-[90vw] max-h-[90vh] min-w-[300px] min-h-[300px]"
         style={{
-          gridTemplateColumns: `repeat(${width}, minmax(0, 1fr))`,
+          gridTemplateColumns: `repeat(${width}, minmax(48px, 1fr))`, // <-- updated here
           aspectRatio: `${width} / ${height}`,
         }}
       >
