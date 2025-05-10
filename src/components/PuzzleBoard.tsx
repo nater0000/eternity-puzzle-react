@@ -16,6 +16,7 @@ type Props = {
 
 const PuzzleBoard: React.FC<Props> = ({
   width,
+  height,
   board,
   motifStyle,
   rotationMap,
@@ -49,32 +50,39 @@ const PuzzleBoard: React.FC<Props> = ({
   };
 
   return (
-    <div
-      className="grid gap-1 bg-gray-800 p-2 rounded shadow"
-      style={{ gridTemplateColumns: `repeat(${width}, 1fr)` }}
-    >
-      {board.map((cell, idx) => (
-        <div
-          key={idx}
-          onDrop={(e) => handleDrop(e, idx)}
-          onDragOver={handleDragOver}
-          onContextMenu={(e) => handleRightClick(e, idx)}
-          onClick={(e) => handleLeftClick(e, idx)}
-          className="aspect-square bg-gray-200 rounded flex items-center justify-center"
-        >
-          {cell.piece ? (
-            <Piece
-              id={cell.piece.id}
-              edges={cell.piece.edges}
-              motifStyle={motifStyle}
-              rotation={rotationMap[cell.piece.id] ?? 0}
-              isDragging={false}
-            />
-          ) : (
-            <div className="w-full h-full bg-gray-300 border border-gray-400 rounded" />
-          )}
-        </div>
-      ))}
+    <div className="flex-grow flex justify-center items-center overflow-hidden">
+      <div
+        className="grid gap-[2px] p-2"
+        style={{
+          gridTemplateColumns: `repeat(${width}, minmax(0, 1fr))`,
+          width: "100%",
+          maxWidth: "min(100vh, 100vw)", // limit size to viewport
+          aspectRatio: `${width} / ${height}`, // maintain aspect ratio
+        }}
+      >
+        {board.map((cell, idx) => (
+          <div
+            key={idx}
+            onDrop={(e) => handleDrop(e, idx)}
+            onDragOver={handleDragOver}
+            onContextMenu={(e) => handleRightClick(e, idx)}
+            onClick={(e) => handleLeftClick(e, idx)}
+            className="aspect-square bg-gray-200 rounded flex items-center justify-center"
+          >
+            {cell.piece ? (
+              <Piece
+                id={cell.piece.id}
+                edges={cell.piece.edges}
+                motifStyle={motifStyle}
+                rotation={rotationMap[cell.piece.id] ?? 0}
+                isDragging={false}
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-300 border border-gray-400 rounded" />
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
