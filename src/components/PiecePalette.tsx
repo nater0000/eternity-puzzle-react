@@ -29,8 +29,8 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
 
   const initialWidth = 300;
   const initialHeight = Math.min(window.innerHeight / 2, window.innerHeight - 100);
-  const initialTop = Math.max(16, window.innerHeight - initialHeight - 8);
-  const initialLeft = Math.max(16, window.innerWidth - initialWidth - 16);
+  const initialTop = Math.max(8, window.innerHeight - initialHeight - 12);
+  const initialLeft = Math.max(8, window.innerWidth - initialWidth - 8);
 
   const [dimensions, setDimensions] = useState({ width: initialWidth, height: initialHeight });
   const [position, setPosition] = useState({ top: initialTop, left: initialLeft });
@@ -44,8 +44,8 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   useEffect(() => {
     const handleResize = () => {
       setPosition((pos) => ({
-        top: Math.min(Math.max(0, pos.top), window.innerHeight - MIN_HEIGHT - 8),
-        left: Math.min(Math.max(0, pos.left), window.innerWidth - MIN_WIDTH - 16),
+        top: Math.min(Math.max(0, pos.top), window.innerHeight - MIN_HEIGHT),
+        left: Math.min(Math.max(0, pos.left), window.innerWidth - MIN_WIDTH),
       }));
     };
     window.addEventListener("resize", handleResize);
@@ -159,6 +159,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
         boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
         minWidth: MIN_WIDTH,
         minHeight: MIN_HEIGHT,
+        overflow: "hidden",
       }}
     >
       <div

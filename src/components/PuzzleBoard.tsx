@@ -1,5 +1,5 @@
 // PuzzleBoard.tsx
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { BoardPosition } from "../types/puzzle";
 import Piece from "./Piece";
 import type { MotifStyle } from "../App";
@@ -25,6 +25,24 @@ const PuzzleBoard: React.FC<Props> = ({
   onRemovePiece,
   onRotatePiece,
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [tileSize, setTileSize] = useState(48);
+
+  useEffect(() => {
+    const updateTileSize = () => {
+      if (!containerRef.current) return;
+      const { clientWidth, clientHeight } = containerRef.current;
+      const maxTileWidth = clientWidth / width;
+      const maxTileHeight = clientHeight / height;
+      const size = Math.floor(Math.min(maxTileWidth, maxTileHeight));
+      setTileSize(Math.max(24, size));
+    };
+
+    updateTileSize();
+    window.addEventListener("resize", updateTileSize);
+    return () => window.removeEventListener("resize", updateTileSize);
+  }, [width, height]);
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, index: number) => {
     e.preventDefault();
     const pieceIdStr = e.dataTransfer.getData("pieceId");
@@ -51,36 +69,45 @@ const PuzzleBoard: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex-grow flex justify-center items-center p-4 overflow-hidden">
+    <div className="flex-grow flex justify-center items-center p-2 overflow-hidden">
       <div
-        className="grid gap-[2px] w-full max-w-[90vw] max-h-[90vh] min-w-[300px] min-h-[300px]"
-        style={{
-          gridTemplateColumns: `repeat(${width}, minmax(48px, 1fr))`, // <-- updated here
-          aspectRatio: `${width} / ${height}`,
-        }}
+        ref={containerRef}
+        className="w-full h-full max-w-[100vw] max-h-[100vh] flex items-center justify-center"
       >
-        {board.map((cell, idx) => (
-          <div
-            key={idx}
-            onDrop={(e) => handleDrop(e, idx)}
-            onDragOver={handleDragOver}
-            onContextMenu={(e) => handleRightClick(e, idx)}
-            onClick={(e) => handleLeftClick(e, idx)}
-            className="aspect-square bg-gray-200 rounded flex items-center justify-center"
-          >
-            {cell.piece ? (
-              <Piece
-                id={cell.piece.id}
-                edges={cell.piece.edges}
-                motifStyle={motifStyle}
-                rotation={rotationMap[cell.piece.id] ?? 0}
-                isDragging={false}
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-300 border border-gray-400 rounded" />
-            )}
-          </div>
-        ))}
+        <div
+          className="grid gap-[2px]"
+          style={{
+            gridTemplateColumns: `repeat(${width}, ${tileSize}px)`,
+            gridTemplateRows: `repeat(${height}, ${tileSize}px)`,
+          }}
+        >
+          {board.map((cell, idx) => (
+            <div
+              key={idx}
+              onDrop={(e) => handleDrop(e, idx)}
+              onDragOver={handleDragOver}
+              onContextMenu={(e) => handleRightClick(e, idx)}
+              onClick={(e) => handleLeftClick(e, idx)}
+              className="bg-gray-200 rounded flex items-center justify-center"
+              style={{
+                width: tileSize,
+                height: tileSize,
+              }}
+            >
+              {cell.piece ? (
+                <Piece
+                  id={cell.piece.id}
+                  edges={cell.piece.edges}
+                  motifStyle={motifStyle}
+                  rotation={rotationMap[cell.piece.id] ?? 0}
+                  isDragging={false}
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-300 border border-gray-400 rounded" />
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
