@@ -1,4 +1,3 @@
-// PuzzleBoard.tsx
 import React, { useEffect, useRef, useState } from "react";
 import type { BoardPosition } from "../types/puzzle";
 import Piece from "./Piece";
@@ -28,25 +27,35 @@ const PuzzleBoard: React.FC<Props> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [tileSize, setTileSize] = useState(48);
 
+  const updateTileSize = () => {
+    if (!containerRef.current) return;
+
+    const { clientWidth, clientHeight } = containerRef.current;
+
+    // Wait until the DOM has proper dimensions
+    if (clientWidth === 0 || clientHeight === 0) return;
+
+    const padding = 16;
+    const availableWidth = clientWidth - padding;
+    const availableHeight = clientHeight - padding;
+
+    const maxTileWidth = availableWidth / width;
+    const maxTileHeight = availableHeight / height;
+    const size = Math.floor(Math.min(maxTileWidth, maxTileHeight));
+
+    setTileSize(Math.max(24, size)); // Prevent tiles from becoming too small
+  };
+
   useEffect(() => {
-    const updateTileSize = () => {
-      if (!containerRef.current) return;
-      const { clientWidth, clientHeight } = containerRef.current;
-
-      // Apply a small padding (e.g., 8px around entire board)
-      const availableWidth = clientWidth - 16;
-      const availableHeight = clientHeight - 16;
-
-      const maxTileWidth = availableWidth / width;
-      const maxTileHeight = availableHeight / height;
-
-      const size = Math.floor(Math.min(maxTileWidth, maxTileHeight));
-      setTileSize(Math.max(24, size));
+    const resizeWithFrame = () => {
+      requestAnimationFrame(() => {
+        updateTileSize();
+      });
     };
 
-    updateTileSize();
-    window.addEventListener("resize", updateTileSize);
-    return () => window.removeEventListener("resize", updateTileSize);
+    resizeWithFrame();
+    window.addEventListener("resize", resizeWithFrame);
+    return () => window.removeEventListener("resize", resizeWithFrame);
   }, [width, height]);
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, index: number) => {
@@ -78,7 +87,7 @@ const PuzzleBoard: React.FC<Props> = ({
     <div className="flex-grow flex justify-center items-center p-2 overflow-hidden">
       <div
         ref={containerRef}
-        className="w-full h-full flex items-center justify-center"
+        className="w-full h-full flex justify-center items-center"
       >
         <div
           className="grid gap-[2px]"
