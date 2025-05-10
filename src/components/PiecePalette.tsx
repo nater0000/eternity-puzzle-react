@@ -95,6 +95,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   };
 
   const handleMoveStart = (e: React.MouseEvent) => {
+    e.preventDefault();
     dragOffset.current = {
       x: e.clientX - position.left,
       y: e.clientY - position.top,
@@ -165,10 +166,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
       }}
     >
       <div
-        onMouseDown={(e) => {
-          e.preventDefault();
-          handleMoveStart(e);
-        }}
+        onMouseDown={handleMoveStart}
         style={{
           cursor: "move",
           backgroundColor: "#ddd",
