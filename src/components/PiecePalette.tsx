@@ -14,7 +14,6 @@ interface PiecePaletteProps {
 
 const MIN_WIDTH = 200;
 const MIN_HEIGHT = 150;
-const PADDING_BOTTOM = 8;
 const MARGIN_RIGHT = 12;
 const MARGIN_BOTTOM = 12;
 const MARGIN_TOP = 8;
