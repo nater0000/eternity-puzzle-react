@@ -14,8 +14,10 @@ interface PiecePaletteProps {
 
 const MIN_WIDTH = 200;
 const MIN_HEIGHT = 150;
-const MIN_TOP = 8;
 const PADDING_BOTTOM = 8;
+const MARGIN_RIGHT = 12;
+const MARGIN_BOTTOM = 12;
+const MARGIN_TOP = 8;
 
 const PiecePalette: React.FC<PiecePaletteProps> = ({
   placedPieceIds,
@@ -31,8 +33,8 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
 
   const initialWidth = 300;
   const initialHeight = Math.min(window.innerHeight / 2, window.innerHeight - 100);
-  const initialTop = Math.max(MIN_TOP, window.innerHeight - initialHeight - PADDING_BOTTOM);
-  const initialLeft = Math.max(8, window.innerWidth - initialWidth - 8);
+  const initialTop = Math.max(MARGIN_TOP, window.innerHeight - initialHeight - MARGIN_BOTTOM);
+  const initialLeft = Math.max(MARGIN_RIGHT, window.innerWidth - initialWidth - MARGIN_RIGHT);
 
   const [dimensions, setDimensions] = useState({ width: initialWidth, height: initialHeight });
   const [position, setPosition] = useState({ top: initialTop, left: initialLeft });
@@ -45,19 +47,14 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
 
   useEffect(() => {
     const handleResize = () => {
-      const newTop = Math.min(
-        Math.max(MIN_TOP, position.top),
-        window.innerHeight - MIN_HEIGHT
-      );
-      const newLeft = Math.min(
-        Math.max(0, position.left),
-        window.innerWidth - MIN_WIDTH
-      );
-      setPosition({ top: newTop, left: newLeft });
+      setPosition((pos) => ({
+        top: Math.min(Math.max(MARGIN_TOP, pos.top), window.innerHeight - MIN_HEIGHT - MARGIN_BOTTOM),
+        left: Math.min(Math.max(MARGIN_RIGHT, pos.left), window.innerWidth - MIN_WIDTH - MARGIN_RIGHT),
+      }));
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [position]);
+  }, []);
 
   const handleLeftClick = (id: number) => {
     const newRotation = ((rotations[id] || 0) + 1) % 4;
@@ -110,8 +107,11 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
       const proposedLeft = moveEvent.clientX - dragOffset.current.x;
       const proposedTop = moveEvent.clientY - dragOffset.current.y;
 
-      const newLeft = Math.min(window.innerWidth - MIN_WIDTH, Math.max(0, proposedLeft));
-      const newTop = Math.min(window.innerHeight - MIN_HEIGHT, Math.max(MIN_TOP, proposedTop));
+      const newLeft = Math.min(window.innerWidth - MIN_WIDTH - MARGIN_RIGHT, Math.max(MARGIN_RIGHT, proposedLeft));
+      const newTop = Math.min(
+        window.innerHeight - MIN_HEIGHT - MARGIN_BOTTOM,
+        Math.max(MARGIN_TOP, proposedTop)
+      );
 
       setPosition({ top: newTop, left: newLeft });
     };
@@ -132,14 +132,14 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
           setIsVisible(true);
           setDimensions({ width: initialWidth, height: initialHeight });
           setPosition({
-            top: Math.max(MIN_TOP, window.innerHeight - initialHeight - PADDING_BOTTOM),
+            top: Math.max(MARGIN_TOP, window.innerHeight - initialHeight - MARGIN_BOTTOM),
             left: initialLeft,
           });
         }}
         style={{
           position: "fixed",
-          bottom: "12px",
-          right: "12px",
+          bottom: `${MARGIN_BOTTOM}px`,
+          right: `${MARGIN_RIGHT}px`,
           zIndex: 1000,
           padding: "8px 14px",
           background: "#eee",
