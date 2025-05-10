@@ -29,8 +29,8 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
 
   const initialWidth = 300;
   const initialHeight = Math.min(window.innerHeight / 2, window.innerHeight - 100);
-  const initialTop = Math.max(16, window.innerHeight - initialHeight - 80);
-  const initialLeft = Math.max(16, window.innerWidth - initialWidth - 16);
+  const initialTop = Math.max(8, window.innerHeight - initialHeight - 8);
+  const initialLeft = Math.max(8, window.innerWidth - initialWidth - 8);
 
   const [dimensions, setDimensions] = useState({ width: initialWidth, height: initialHeight });
   const [position, setPosition] = useState({ top: initialTop, left: initialLeft });
@@ -45,13 +45,13 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   useEffect(() => {
     const handleResize = () => {
       setPosition((pos) => ({
-        top: Math.min(pos.top, window.innerHeight - MIN_HEIGHT - 20),
-        left: Math.min(pos.left, window.innerWidth - MIN_WIDTH - 20),
+        top: Math.min(pos.top, window.innerHeight - dimensions.height - 8),
+        left: Math.min(pos.left, window.innerWidth - dimensions.width - 8),
       }));
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [dimensions]);
 
   const handleLeftClick = (id: number) => {
     const newRotation = ((rotations[id] || 0) + 1) % 4;
@@ -102,7 +102,10 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
     const onMouseMove = (moveEvent: MouseEvent) => {
       const newLeft = Math.min(window.innerWidth - MIN_WIDTH, Math.max(0, moveEvent.clientX - dragOffset.current.x));
       const newTop = Math.min(window.innerHeight - MIN_HEIGHT, Math.max(0, moveEvent.clientY - dragOffset.current.y));
-      setPosition({ top: newTop, left: newLeft });
+      setPosition({
+        top: Math.max(0, newTop),
+        left: Math.max(0, newLeft),
+      });
     };
 
     const onMouseUp = () => {
@@ -174,13 +177,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
         <button onClick={() => setIsVisible(false)}>×</button>
       </div>
 
-      <div
-        style={{
-          flexGrow: 1,
-          overflow: "auto",
-          padding: "6px",
-        }}
-      >
+      <div style={{ flexGrow: 1, overflow: "auto", padding: "6px" }}>
         <div
           style={{
             display: "grid",
@@ -206,6 +203,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
                   rotation={rotation}
                   isDragging={false}
                   motifStyle={motifStyle}
+                  size={48}
                 />
               </div>
             );
