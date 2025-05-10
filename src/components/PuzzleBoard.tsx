@@ -106,13 +106,6 @@ const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                   rotation={pieceRotations[piece.id] ?? 0}
                   isDragging={false}
                   motifStyle={motifStyle}
-                  onClick={() =>
-                    onRotatePiece(piece.id, ((pieceRotations[piece.id] ?? 0) + 1) % 4)
-                  }
-                  onContextMenu={(e: React.MouseEvent) => {
-                    e.preventDefault();
-                    onRemovePiece(piece.id);
-                  }}
                 />
               )}
             </div>
