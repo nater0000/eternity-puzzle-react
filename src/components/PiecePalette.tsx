@@ -1,22 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
-import { allPieces } from "../data/pieces";
+import React, { useState, useRef, useEffect } from "react";
 import Piece from "./Piece";
-import type { MotifStyle } from "../App";
+import { allPieces } from "../data/pieces";
+import "./PiecePalette.css";
 
 interface PiecePaletteProps {
   placedPieceIds: Set<number>;
-  motifStyle: MotifStyle;
+  motifStyle: "symbol" | "svg";
   onDragStart: (id: number) => void;
   onDragEnd: () => void;
   onRotatePiece: (id: number, rotation: number) => void;
   pieceRotations?: Record<number, number>;
 }
-
-const MIN_WIDTH = 200;
-const MIN_HEIGHT = 150;
-const MARGIN_RIGHT = 12;
-const MARGIN_BOTTOM = 12;
-const MARGIN_TOP = 8;
 
 const PiecePalette: React.FC<PiecePaletteProps> = ({
   placedPieceIds,
@@ -26,215 +20,174 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   onRotatePiece,
   pieceRotations = {},
 }) => {
-  const unplacedPieces = allPieces.filter((piece) => !placedPieceIds.has(piece.id));
-  const [rotations, setRotations] = useState<Record<number, number>>(pieceRotations);
-  const [isVisible, setIsVisible] = useState(true);
+  const [visible, setVisible] = useState(true);
+  const popupRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [size, setSize] = useState({ width: 5 * 60 + 16, height: window.innerHeight / 2 });
+  const [dragging, setDragging] = useState(false);
+  const [resizing, setResizing] = useState(false);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
 
-  const initialWidth = 300;
-  const initialHeight = Math.min(window.innerHeight / 2, window.innerHeight - 50);
-  const initialTop = Math.max(MARGIN_TOP, window.innerHeight - initialHeight - MARGIN_BOTTOM);
-  const initialLeft = Math.max(MARGIN_RIGHT, window.innerWidth - initialWidth - MARGIN_RIGHT);
-
-  const [dimensions, setDimensions] = useState({ width: initialWidth, height: initialHeight });
-  const [position, setPosition] = useState({ top: initialTop, left: initialLeft });
-
-  const dragOffset = useRef({ x: 0, y: 0 });
-
-  useEffect(() => {
-    setRotations((prev) => ({ ...pieceRotations, ...prev }));
-  }, [pieceRotations]);
+  const MARGIN = 8;
+  const MARGIN_BOTTOM = 8;
+  const MARGIN_TOP = 8;
+  const MIN_WIDTH = 200;
+  const MIN_HEIGHT = 100;
 
   useEffect(() => {
-    const handleResize = () => {
-      setPosition((pos) => ({
-        top: Math.min(Math.max(MARGIN_TOP, pos.top), window.innerHeight - 40),
-        left: Math.min(Math.max(MARGIN_RIGHT, pos.left), window.innerWidth - MIN_WIDTH - MARGIN_RIGHT),
-      }));
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const handleLeftClick = (id: number) => {
-    const newRotation = ((rotations[id] || 0) + 1) % 4;
-    setRotations((prev) => ({ ...prev, [id]: newRotation }));
-    onRotatePiece(id, newRotation);
-  };
-
-  const handleRightClick = (e: React.MouseEvent, id: number) => {
-    e.preventDefault();
-    setRotations((prev) => ({ ...prev, [id]: 0 }));
-    onRotatePiece(id, 0);
-  };
-
-  const handleDragStart = (e: React.DragEvent, id: number, rotation: number) => {
-    e.dataTransfer.setData("pieceId", id.toString());
-    e.dataTransfer.setData("rotation", rotation.toString());
-    onDragStart(id);
-  };
-
-  const handleResize = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startWidth = dimensions.width;
-    const startHeight = dimensions.height;
-
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      const newWidth = Math.max(MIN_WIDTH, startWidth + moveEvent.clientX - startX);
-      const newHeight = Math.max(MIN_HEIGHT, startHeight + moveEvent.clientY - startY);
-      setDimensions({ width: newWidth, height: newHeight });
-    };
-
-    const onMouseUp = () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  };
-
-  const handleMoveStart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    dragOffset.current = {
-      x: e.clientX - position.left,
-      y: e.clientY - position.top,
-    };
-
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      const proposedLeft = moveEvent.clientX - dragOffset.current.x;
-      const proposedTop = moveEvent.clientY - dragOffset.current.y;
-
-      const clampedTop = Math.min(
-        window.innerHeight - 40, // keep title bar in view
-        Math.max(MARGIN_TOP, proposedTop)
+    if (visible) {
+      const width = 5 * 60 + 16;
+      const height = window.innerHeight / 2;
+      const left = window.innerWidth - width - MARGIN;
+      const maxTop = window.innerHeight - MIN_HEIGHT - MARGIN_BOTTOM;
+      const top = Math.max(
+        MARGIN_TOP,
+        Math.min(window.innerHeight - height - MARGIN_BOTTOM, maxTop)
       );
-      const clampedLeft = Math.min(
-        window.innerWidth - MIN_WIDTH - MARGIN_RIGHT,
-        Math.max(MARGIN_RIGHT, proposedLeft)
-      );
+      setSize({ width, height });
+      setPosition({ top, left });
+    }
+  }, [visible]);
 
-      setPosition({ top: clampedTop, left: clampedLeft });
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (dragging) {
+        const newLeft = Math.min(Math.max(e.clientX - offset.x, MARGIN), window.innerWidth - size.width - MARGIN);
+        const newTop = Math.min(Math.max(e.clientY - offset.y, MARGIN_TOP), window.innerHeight - MARGIN_BOTTOM);
+        setPosition({ top: newTop, left: newLeft });
+      } else if (resizing) {
+        const newWidth = Math.max(MIN_WIDTH, e.clientX - position.left);
+        const newHeight = Math.max(MIN_HEIGHT, e.clientY - position.top);
+        setSize({ width: newWidth, height: newHeight });
+      }
     };
 
-    const onMouseUp = () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
+    const handleMouseUp = () => {
+      setDragging(false);
+      setResizing(false);
     };
 
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [dragging, resizing, offset, position, size]);
+
+  const unplacedPieces = Object.values(allPieces).filter((p) => !placedPieceIds.has(p.id));
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (popupRef.current && e.target === popupRef.current.querySelector(".title-bar")) {
+      const rect = popupRef.current.getBoundingClientRect();
+      setDragging(true);
+      setOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    }
   };
-
-  if (!isVisible) {
-    return (
-      <button
-        onClick={() => {
-          setIsVisible(true);
-          const height = Math.min(window.innerHeight / 2, window.innerHeight - 50);
-          const top = Math.max(MARGIN_TOP, window.innerHeight - height - MARGIN_BOTTOM);
-          const left = Math.max(MARGIN_RIGHT, window.innerWidth - initialWidth - MARGIN_RIGHT);
-          setDimensions({ width: initialWidth, height });
-          setPosition({ top, left });
-        }}
-        style={{
-          position: "fixed",
-          bottom: `${MARGIN_BOTTOM}px`,
-          right: `${MARGIN_RIGHT}px`,
-          zIndex: 1000,
-          padding: "8px 14px",
-          background: "#eee",
-          border: "1px solid #aaa",
-          borderRadius: "4px",
-        }}
-      >
-        Show Pieces
-      </button>
-    );
-  }
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: position.top,
-        left: position.left,
-        width: dimensions.width,
-        height: dimensions.height,
-        backgroundColor: "#f9f9f9",
-        border: "1px solid #ccc",
-        display: "flex",
-        flexDirection: "column",
-        zIndex: 1000,
-        boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
-        minWidth: MIN_WIDTH,
-        minHeight: MIN_HEIGHT,
-        overflow: "hidden",
-      }}
-    >
-      <div
-        onMouseDown={handleMoveStart}
-        style={{
-          cursor: "move",
-          backgroundColor: "#ddd",
-          padding: "4px 8px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          userSelect: "none",
-        }}
-      >
-        <span style={{ fontWeight: "bold" }}>Piece Palette</span>
-        <button onClick={() => setIsVisible(false)}>×</button>
-      </div>
-
-      <div style={{ flexGrow: 1, overflow: "auto", padding: "6px" }}>
+    <>
+      {!visible && (
+        <button
+          style={{ position: "fixed", bottom: MARGIN, right: MARGIN, zIndex: 1000 }}
+          onClick={() => setVisible(true)}
+        >
+          Show Pieces
+        </button>
+      )}
+      {visible && (
         <div
+          ref={popupRef}
+          className="piece-palette"
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(48px, 1fr))",
-            gap: "6px",
+            position: "fixed",
+            top: position.top,
+            left: position.left,
+            width: size.width,
+            height: size.height,
+            zIndex: 1000,
+            backgroundColor: "#eee",
+            border: "1px solid #ccc",
+            boxShadow: "2px 2px 12px rgba(0,0,0,0.3)",
+            overflow: "hidden",
           }}
         >
-          {unplacedPieces.map((piece) => {
-            const rotation = rotations[piece.id] || 0;
-            return (
+          <div
+            className="title-bar"
+            onMouseDown={handleMouseDown}
+            style={{
+              cursor: "move",
+              padding: "4px 8px",
+              background: "#ccc",
+              fontWeight: "bold",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              userSelect: "none",
+            }}
+          >
+            Piece Palette
+            <button onClick={() => setVisible(false)}>×</button>
+          </div>
+          <div
+            className="palette-content"
+            style={{
+              overflowY: "auto",
+              padding: "4px",
+              height: `calc(100% - 32px)`,
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, 60px)",
+              gap: "4px",
+              justifyContent: "center",
+            }}
+          >
+            {unplacedPieces.map((piece) => (
               <div
                 key={piece.id}
                 draggable
-                onDragStart={(e) => handleDragStart(e, piece.id, rotation)}
-                onDragEnd={onDragEnd}
-                onClick={() => handleLeftClick(piece.id)}
-                onContextMenu={(e) => handleRightClick(e, piece.id)}
-                style={{ cursor: "grab" }}
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("pieceId", piece.id.toString());
+                  e.dataTransfer.setData("rotation", (pieceRotations[piece.id] || 0).toString());
+                  onDragStart(piece.id);
+                }}
+                onDragEnd={() => onDragEnd()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const newRotation = ((pieceRotations[piece.id] || 0) + 1) % 4;
+                  onRotatePiece(piece.id, newRotation);
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  onRotatePiece(piece.id, 0);
+                }}
               >
                 <Piece
                   id={piece.id}
                   edges={piece.edges}
-                  rotation={rotation}
+                  rotation={pieceRotations[piece.id] || 0}
                   isDragging={false}
                   motifStyle={motifStyle}
+                  size={60}
                 />
               </div>
-            );
-          })}
+            ))}
+          </div>
+          <div
+            className="resize-handle"
+            onMouseDown={() => setResizing(true)}
+            style={{
+              position: "absolute",
+              width: "16px",
+              height: "16px",
+              bottom: "0",
+              right: "0",
+              cursor: "nwse-resize",
+              backgroundColor: "transparent",
+            }}
+          />
         </div>
-      </div>
-
-      <div
-        onMouseDown={handleResize}
-        style={{
-          position: "absolute",
-          right: 0,
-          bottom: 0,
-          width: "12px",
-          height: "12px",
-          cursor: "nwse-resize",
-          backgroundColor: "#ccc",
-        }}
-      />
-    </div>
+      )}
+    </>
   );
 };
 
