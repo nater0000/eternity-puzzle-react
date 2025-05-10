@@ -1,68 +1,67 @@
 import React, { useEffect, useRef, useState } from "react";
-import type { BoardPosition } from "../types/puzzle";
+import { BoardPosition } from "../types/puzzle";
 import Piece from "./Piece";
 import type { MotifStyle } from "../App";
 
-type Props = {
-  width: number;
-  height: number;
+interface PuzzleBoardProps {
   board: BoardPosition[];
+  rows: number;
+  cols: number;
   motifStyle: MotifStyle;
-  rotationMap: Record<number, number>;
-  onDropPiece: (index: number, pieceId: number, rotation: number) => void;
-  onRemovePiece: (index: number) => void;
-  onRotatePiece: (index: number) => void;
-};
+  placedPieceIds: Set<number>;
+  pieceRotations: Record<number, number>;
+  onDropPiece: (id: number, x: number, y: number, rotation?: number) => void;
+  onRemovePiece: (id: number) => void;
+  onRotatePiece: (id: number, rotation: number) => void;
+}
 
-const PuzzleBoard: React.FC<Props> = ({
-  width,
-  height,
+const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
   board,
+  rows,
+  cols,
   motifStyle,
-  rotationMap,
+  placedPieceIds,
+  pieceRotations,
   onDropPiece,
   onRemovePiece,
   onRotatePiece,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [tileSize, setTileSize] = useState(64);
-
-  const updateTileSize = () => {
-    const padding = 24;
-    const container = containerRef.current;
-
-    if (container) {
-      const { width: containerWidth, height: containerHeight } = container.getBoundingClientRect();
-
-      const maxTileWidth = (containerWidth - padding) / width;
-      const maxTileHeight = (containerHeight - padding) / height;
-      const newSize = Math.floor(Math.min(maxTileWidth, maxTileHeight));
-      setTileSize(Math.max(24, newSize)); // Minimum tile size
-    }
-  };
+  const [tileSize, setTileSize] = useState<number>(48);
 
   useEffect(() => {
-    const resizeObserver = new ResizeObserver(updateTileSize);
-    const container = containerRef.current;
-  
-    // Delay initial size calculation to allow layout to stabilize
-    requestAnimationFrame(() => {
-      updateTileSize();
-      if (container) resizeObserver.observe(container);
-    });
-  
-    return () => resizeObserver.disconnect();
-  }, [width, height]);
-  
+    const updateTileSize = () => {
+      if (containerRef.current) {
+        const { clientWidth, clientHeight } = containerRef.current;
+        const availableWidth = clientWidth - 16;
+        const availableHeight = clientHeight - 16;
+        const newSize = Math.floor(Math.min(availableWidth / cols, availableHeight / rows));
+        setTileSize(Math.max(24, newSize));
+      }
+    };
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    // Defer first calculation until after render
+    requestAnimationFrame(updateTileSize);
+
+    const resizeObserver = new ResizeObserver(updateTileSize);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [rows, cols]);
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, x: number, y: number) => {
     e.preventDefault();
     const pieceIdStr = e.dataTransfer.getData("pieceId");
-    const pieceId = parseInt(pieceIdStr, 10);
     const rotationStr = e.dataTransfer.getData("rotation");
+    const pieceId = parseInt(pieceIdStr, 10);
     const rotation = rotationStr ? parseInt(rotationStr, 10) : 0;
+
     if (!isNaN(pieceId)) {
-      onDropPiece(index, pieceId, rotation);
+      onDropPiece(pieceId, x, y, rotation);
     }
   };
 
@@ -70,53 +69,58 @@ const PuzzleBoard: React.FC<Props> = ({
     e.preventDefault();
   };
 
-  const handleRightClick = (e: React.MouseEvent, index: number) => {
-    e.preventDefault();
-    onRemovePiece(index);
-  };
-
-  const handleLeftClick = (e: React.MouseEvent, index: number) => {
-    e.preventDefault();
-    onRotatePiece(index);
-  };
-
   return (
-    <div className="flex-grow flex justify-center items-center overflow-hidden">
-      <div ref={containerRef} className="w-full h-full flex justify-center items-center">
-        <div
-          className="grid gap-[2px]"
-          style={{
-            gridTemplateColumns: `repeat(${width}, ${tileSize}px)`,
-            gridTemplateRows: `repeat(${height}, ${tileSize}px)`,
-          }}
-        >
-          {board.map((cell, idx) => (
+    <div
+      ref={containerRef}
+      className="flex-grow flex justify-center items-center p-2 overflow-hidden"
+    >
+      <div
+        className="grid gap-0.5"
+        style={{
+          gridTemplateColumns: `repeat(${cols}, ${tileSize}px)`,
+          gridTemplateRows: `repeat(${rows}, ${tileSize}px)`,
+        }}
+      >
+        {Array.from({ length: rows * cols }, (_, index) => {
+          const x = index % cols;
+          const y = Math.floor(index / cols);
+          const position = board.find((p) => p.x === x && p.y === y);
+          const piece = position?.piece;
+
+          return (
             <div
-              key={idx}
-              onDrop={(e) => handleDrop(e, idx)}
+              key={`${x}-${y}`}
+              onDrop={(e) => handleDrop(e, x, y)}
               onDragOver={handleDragOver}
-              onContextMenu={(e) => handleRightClick(e, idx)}
-              onClick={(e) => handleLeftClick(e, idx)}
-              className="bg-gray-200 rounded flex items-center justify-center"
               style={{
                 width: tileSize,
                 height: tileSize,
+                backgroundColor: "#e0e0e0",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
               }}
             >
-              {cell.piece ? (
+              {piece && (
                 <Piece
-                  id={cell.piece.id}
-                  edges={cell.piece.edges}
-                  motifStyle={motifStyle}
-                  rotation={rotationMap[cell.piece.id] ?? 0}
+                  id={piece.id}
+                  edges={piece.edges}
+                  rotation={pieceRotations[piece.id] ?? 0}
                   isDragging={false}
+                  motifStyle={motifStyle}
+                  size={tileSize}
+                  onClick={() =>
+                    onRotatePiece(piece.id, ((pieceRotations[piece.id] ?? 0) + 1) % 4)
+                  }
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    onRemovePiece(piece.id);
+                  }}
                 />
-              ) : (
-                <div className="w-full h-full bg-gray-300 border border-gray-400 rounded" />
               )}
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </div>
   );
