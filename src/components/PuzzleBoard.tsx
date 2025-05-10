@@ -28,28 +28,26 @@ const PuzzleBoard: React.FC<Props> = ({
   const [tileSize, setTileSize] = useState(48);
 
   const updateTileSize = () => {
-    const container = containerRef.current;
     const padding = 24;
-
-    let availableWidth = window.innerWidth - padding;
-    let availableHeight = window.innerHeight - padding;
+    const container = containerRef.current;
 
     if (container) {
-      availableWidth = container.clientWidth - padding;
-      availableHeight = container.clientHeight - padding;
+      const { width: containerWidth, height: containerHeight } = container.getBoundingClientRect();
+
+      const maxTileWidth = (containerWidth - padding) / width;
+      const maxTileHeight = (containerHeight - padding) / height;
+      const newSize = Math.floor(Math.min(maxTileWidth, maxTileHeight));
+      setTileSize(Math.max(24, newSize)); // Minimum tile size
     }
-
-    const maxTileWidth = availableWidth / width;
-    const maxTileHeight = availableHeight / height;
-
-    const size = Math.floor(Math.min(maxTileWidth, maxTileHeight));
-    setTileSize(Math.max(24, size)); // Don't allow tiles smaller than 24px
   };
 
   useEffect(() => {
     updateTileSize();
-    window.addEventListener("resize", updateTileSize);
-    return () => window.removeEventListener("resize", updateTileSize);
+    const resizeObserver = new ResizeObserver(updateTileSize);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    return () => resizeObserver.disconnect();
   }, [width, height]);
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, index: number) => {
@@ -79,14 +77,7 @@ const PuzzleBoard: React.FC<Props> = ({
 
   return (
     <div className="flex-grow flex justify-center items-center overflow-hidden">
-      <div
-        ref={containerRef}
-        className="w-full h-full flex justify-center items-center"
-        style={{
-          minWidth: "80vw",
-          minHeight: "80vh",
-        }}
-      >
+      <div ref={containerRef} className="w-full h-full flex justify-center items-center">
         <div
           className="grid gap-[2px]"
           style={{
