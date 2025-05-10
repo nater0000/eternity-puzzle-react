@@ -31,24 +31,19 @@ const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     const updateTileSize = () => {
       if (containerRef.current) {
         const { clientWidth, clientHeight } = containerRef.current;
-        const availableWidth = clientWidth - 16;
-        const availableHeight = clientHeight - 16;
+        const padding = 16;
+        const availableWidth = clientWidth - padding;
+        const availableHeight = clientHeight - padding;
         const newSize = Math.floor(Math.min(availableWidth / cols, availableHeight / rows));
         setTileSize(Math.max(24, newSize));
       }
     };
 
-    // Initial update after render
     requestAnimationFrame(updateTileSize);
 
     const resizeObserver = new ResizeObserver(updateTileSize);
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
-
-    return () => {
-      resizeObserver.disconnect();
-    };
+    if (containerRef.current) resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
   }, [rows, cols]);
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, x: number, y: number) => {
@@ -106,6 +101,13 @@ const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                   rotation={pieceRotations[piece.id] ?? 0}
                   isDragging={false}
                   motifStyle={motifStyle}
+                  onClick={() =>
+                    onRotatePiece(piece.id, (pieceRotations[piece.id] ?? 0) + 1)
+                  }
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    onRemovePiece(piece.id);
+                  }}
                 />
               )}
             </div>
