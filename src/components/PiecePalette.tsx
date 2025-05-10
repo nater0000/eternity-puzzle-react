@@ -29,7 +29,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
 
   const initialWidth = 300;
   const initialHeight = Math.min(window.innerHeight / 2, window.innerHeight - 100);
-  const initialTop = Math.max(16, window.innerHeight - initialHeight - 24);
+  const initialTop = Math.max(16, window.innerHeight - initialHeight - 8);
   const initialLeft = Math.max(16, window.innerWidth - initialWidth - 16);
 
   const [dimensions, setDimensions] = useState({ width: initialWidth, height: initialHeight });
@@ -44,7 +44,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   useEffect(() => {
     const handleResize = () => {
       setPosition((pos) => ({
-        top: Math.min(Math.max(0, pos.top), window.innerHeight - MIN_HEIGHT - 16),
+        top: Math.min(Math.max(0, pos.top), window.innerHeight - MIN_HEIGHT - 8),
         left: Math.min(Math.max(0, pos.left), window.innerWidth - MIN_WIDTH - 16),
       }));
     };
@@ -157,6 +157,8 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
         flexDirection: "column",
         zIndex: 1000,
         boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+        minWidth: MIN_WIDTH,
+        minHeight: MIN_HEIGHT,
       }}
     >
       <div
@@ -178,13 +180,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
         <button onClick={() => setIsVisible(false)}>×</button>
       </div>
 
-      <div
-        style={{
-          flexGrow: 1,
-          overflow: "auto",
-          padding: "6px",
-        }}
-      >
+      <div style={{ flexGrow: 1, overflow: "auto", padding: "6px" }}>
         <div
           style={{
             display: "grid",
