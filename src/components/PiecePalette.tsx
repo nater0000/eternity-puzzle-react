@@ -136,7 +136,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
     >
       {/* Title Bar */}
       <div
-        onMouseDown={handleMoveStart}
+        onMouseDown={(e) => {handleMoveStart}
         style={{
           cursor: "move",
           backgroundColor: "#ddd",
