@@ -45,14 +45,19 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
 
   useEffect(() => {
     const handleResize = () => {
-      setPosition((pos) => ({
-        top: Math.min(Math.max(MIN_TOP, pos.top), window.innerHeight - MIN_HEIGHT),
-        left: Math.min(Math.max(0, pos.left), window.innerWidth - MIN_WIDTH),
-      }));
+      const newTop = Math.min(
+        Math.max(MIN_TOP, position.top),
+        window.innerHeight - MIN_HEIGHT
+      );
+      const newLeft = Math.min(
+        Math.max(0, position.left),
+        window.innerWidth - MIN_WIDTH
+      );
+      setPosition({ top: newTop, left: newLeft });
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [position]);
 
   const handleLeftClick = (id: number) => {
     const newRotation = ((rotations[id] || 0) + 1) % 4;
@@ -102,14 +107,12 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
     };
 
     const onMouseMove = (moveEvent: MouseEvent) => {
-      const newLeft = Math.min(
-        window.innerWidth - MIN_WIDTH,
-        Math.max(0, moveEvent.clientX - dragOffset.current.x)
-      );
-      const newTop = Math.min(
-        window.innerHeight - MIN_HEIGHT,
-        Math.max(MIN_TOP, moveEvent.clientY - dragOffset.current.y)
-      );
+      const proposedLeft = moveEvent.clientX - dragOffset.current.x;
+      const proposedTop = moveEvent.clientY - dragOffset.current.y;
+
+      const newLeft = Math.min(window.innerWidth - MIN_WIDTH, Math.max(0, proposedLeft));
+      const newTop = Math.min(window.innerHeight - MIN_HEIGHT, Math.max(MIN_TOP, proposedTop));
+
       setPosition({ top: newTop, left: newLeft });
     };
 
@@ -128,7 +131,10 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
         onClick={() => {
           setIsVisible(true);
           setDimensions({ width: initialWidth, height: initialHeight });
-          setPosition({ top: initialTop, left: initialLeft });
+          setPosition({
+            top: Math.max(MIN_TOP, window.innerHeight - initialHeight - PADDING_BOTTOM),
+            left: initialLeft,
+          });
         }}
         style={{
           position: "fixed",
