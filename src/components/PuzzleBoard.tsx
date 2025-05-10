@@ -50,14 +50,12 @@ const PuzzleBoard: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex-grow flex justify-center items-center overflow-hidden p-2">
+    <div className="flex-grow flex justify-center items-center p-4 overflow-hidden">
       <div
-        className="grid gap-[2px]"
+        className="grid gap-[2px] w-full max-w-screen max-h-[calc(100vh-4rem)]"
         style={{
           gridTemplateColumns: `repeat(${width}, minmax(0, 1fr))`,
           aspectRatio: `${width} / ${height}`,
-          width: "min(95vw, 95vh)",
-          height: "min(95vw, 95vh)",
         }}
       >
         {board.map((cell, idx) => (

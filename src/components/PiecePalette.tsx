@@ -26,8 +26,14 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   const unplacedPieces = allPieces.filter((piece) => !placedPieceIds.has(piece.id));
   const [rotations, setRotations] = useState<Record<number, number>>(pieceRotations);
   const [isVisible, setIsVisible] = useState(true);
-  const [dimensions, setDimensions] = useState({ width: 300, height: window.innerHeight / 2 });
-  const [position, setPosition] = useState({ top: window.innerHeight / 2, left: window.innerWidth - 320 });
+
+  const initialWidth = 300;
+  const initialHeight = Math.min(window.innerHeight / 2, window.innerHeight - 100);
+  const initialTop = Math.max(20, window.innerHeight - initialHeight - 40);
+  const initialLeft = Math.max(20, window.innerWidth - initialWidth - 20);
+
+  const [dimensions, setDimensions] = useState({ width: initialWidth, height: initialHeight });
+  const [position, setPosition] = useState({ top: initialTop, left: initialLeft });
 
   const paletteRef = useRef<HTMLDivElement>(null);
   const dragOffset = useRef({ x: 0, y: 0 });
@@ -83,10 +89,9 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
     };
 
     const onMouseMove = (moveEvent: MouseEvent) => {
-      setPosition({
-        top: Math.max(0, moveEvent.clientY - dragOffset.current.y),
-        left: Math.max(0, moveEvent.clientX - dragOffset.current.x),
-      });
+      const newLeft = Math.min(window.innerWidth - MIN_WIDTH, Math.max(0, moveEvent.clientX - dragOffset.current.x));
+      const newTop = Math.min(window.innerHeight - MIN_HEIGHT, Math.max(0, moveEvent.clientY - dragOffset.current.y));
+      setPosition({ top: newTop, left: newLeft });
     };
 
     const onMouseUp = () => {
@@ -103,13 +108,13 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
       <button
         onClick={() => {
           setIsVisible(true);
-          setDimensions({ width: 300, height: window.innerHeight / 2 });
-          setPosition({ top: window.innerHeight / 2, left: window.innerWidth - 320 });
+          setDimensions({ width: initialWidth, height: initialHeight });
+          setPosition({ top: initialTop, left: initialLeft });
         }}
         style={{
-          position: "absolute",
-          bottom: "20px",
-          right: "20px",
+          position: "fixed",
+          bottom: "16px",
+          right: "16px",
           zIndex: 1000,
         }}
       >
@@ -122,7 +127,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
     <div
       ref={paletteRef}
       style={{
-        position: "absolute",
+        position: "fixed",
         top: position.top,
         left: position.left,
         width: dimensions.width,
@@ -132,13 +137,14 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
         display: "flex",
         flexDirection: "column",
         zIndex: 1000,
+        boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
       }}
     >
       {/* Title Bar */}
       <div
         onMouseDown={(e) => {
-             e.preventDefault();
-             handleMoveStart(e);
+          e.preventDefault();
+          handleMoveStart(e);
         }}
         style={{
           cursor: "move",
