@@ -56,9 +56,9 @@ const PuzzleBoard: React.FC<Props> = ({
         style={{
           gridTemplateColumns: `repeat(${width}, minmax(0, 1fr))`,
           width: "100%",
-          maxWidth: "min(100vh, 100vw)", // limit size to viewport
-          height: "min(100vh, 100vw)",
-          aspectRatio: `${width} / ${height}`, // maintain aspect ratio
+          maxWidth: "min(95vh, 95vw)", // Slight padding
+          height: "min(95vh, 95vw)",    // Prevent vertical overflow
+          aspectRatio: `${width} / ${height}`,
         }}
       >
         {board.map((cell, idx) => (
