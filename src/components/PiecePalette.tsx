@@ -167,7 +167,6 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
                   rotation={pieceRotations[piece.id] || 0}
                   isDragging={false}
                   motifStyle={motifStyle}
-                  size={60}
                 />
               </div>
             ))}
