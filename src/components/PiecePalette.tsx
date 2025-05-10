@@ -29,8 +29,8 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
 
   const initialWidth = 300;
   const initialHeight = Math.min(window.innerHeight / 2, window.innerHeight - 100);
-  const initialTop = Math.max(20, window.innerHeight - initialHeight - 40);
-  const initialLeft = Math.max(20, window.innerWidth - initialWidth - 20);
+  const initialTop = Math.max(16, window.innerHeight - initialHeight - 80);
+  const initialLeft = Math.max(16, window.innerWidth - initialWidth - 16);
 
   const [dimensions, setDimensions] = useState({ width: initialWidth, height: initialHeight });
   const [position, setPosition] = useState({ top: initialTop, left: initialLeft });
@@ -41,6 +41,17 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   useEffect(() => {
     setRotations((prev) => ({ ...pieceRotations, ...prev }));
   }, [pieceRotations]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setPosition((pos) => ({
+        top: Math.min(pos.top, window.innerHeight - MIN_HEIGHT - 20),
+        left: Math.min(pos.left, window.innerWidth - MIN_WIDTH - 20),
+      }));
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleLeftClick = (id: number) => {
     const newRotation = ((rotations[id] || 0) + 1) % 4;
@@ -113,9 +124,13 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
         }}
         style={{
           position: "fixed",
-          bottom: "16px",
-          right: "16px",
+          bottom: "12px",
+          right: "12px",
           zIndex: 1000,
+          padding: "8px 14px",
+          background: "#eee",
+          border: "1px solid #aaa",
+          borderRadius: "4px",
         }}
       >
         Show Pieces
@@ -140,7 +155,6 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
         boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
       }}
     >
-      {/* Title Bar */}
       <div
         onMouseDown={(e) => {
           e.preventDefault();
@@ -160,7 +174,6 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
         <button onClick={() => setIsVisible(false)}>×</button>
       </div>
 
-      {/* Pieces Grid */}
       <div
         style={{
           flexGrow: 1,
@@ -200,7 +213,6 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
         </div>
       </div>
 
-      {/* Resize Handle */}
       <div
         onMouseDown={handleResize}
         style={{
