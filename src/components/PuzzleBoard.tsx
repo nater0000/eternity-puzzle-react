@@ -32,9 +32,6 @@ const PuzzleBoard: React.FC<Props> = ({
 
     const { clientWidth, clientHeight } = containerRef.current;
 
-    // Wait until the DOM has proper dimensions
-    if (clientWidth === 0 || clientHeight === 0) return;
-
     const padding = 16;
     const availableWidth = clientWidth - padding;
     const availableHeight = clientHeight - padding;
@@ -43,14 +40,12 @@ const PuzzleBoard: React.FC<Props> = ({
     const maxTileHeight = availableHeight / height;
     const size = Math.floor(Math.min(maxTileWidth, maxTileHeight));
 
-    setTileSize(Math.max(24, size)); // Prevent tiles from becoming too small
+    setTileSize(Math.max(24, size));
   };
 
   useEffect(() => {
     const resizeWithFrame = () => {
-      requestAnimationFrame(() => {
-        updateTileSize();
-      });
+      requestAnimationFrame(() => updateTileSize());
     };
 
     resizeWithFrame();
@@ -84,10 +79,10 @@ const PuzzleBoard: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex-grow flex justify-center items-center p-2 overflow-hidden">
+    <div className="flex-grow flex justify-center items-center overflow-hidden">
       <div
         ref={containerRef}
-        className="w-full h-full flex justify-center items-center"
+        className="w-full h-full max-w-[100vw] max-h-[100vh] p-2 flex justify-center items-center"
       >
         <div
           className="grid gap-[2px]"
