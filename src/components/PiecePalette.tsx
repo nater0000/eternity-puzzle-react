@@ -147,7 +147,7 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
           const height = Math.max(MIN_HEIGHT, Math.min(availableHeight, window.innerHeight / 2));
           const top = Math.min(
             window.innerHeight - TITLEBAR_HEIGHT,
-            Math.max(MARGIN_TOP, window.innerHeight - initialHeight - MARGIN_BOTTOM)
+            Math.max(MARGIN_TOP, window.innerHeight - height - MARGIN_BOTTOM)
           );
           //const height = Math.min(window.innerHeight / 2, window.innerHeight - 50);
           //const top = Math.max(MARGIN_TOP, window.innerHeight - height - MARGIN_BOTTOM);
