@@ -31,13 +31,13 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
   const [rotations, setRotations] = useState<Record<number, number>>(pieceRotations);
   const [isVisible, setIsVisible] = useState(true);
 
-  const initialWidth = 300;const availableHeight = window.innerHeight - MARGIN_TOP - MARGIN_BOTTOM;
+  const initialWidth = 300;
+  const availableHeight = window.innerHeight - MARGIN_TOP - MARGIN_BOTTOM;
   const initialHeight = Math.max(MIN_HEIGHT, Math.min(availableHeight, window.innerHeight / 2));
   const initialTop = Math.min(
     window.innerHeight - TITLEBAR_HEIGHT,
     Math.max(MARGIN_TOP, window.innerHeight - initialHeight - MARGIN_BOTTOM)
   );
-
   const initialLeft = Math.max(MARGIN_RIGHT, window.innerWidth - initialWidth - MARGIN_RIGHT);
 
   const [dimensions, setDimensions] = useState({ width: initialWidth, height: initialHeight });
@@ -143,8 +143,14 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
       <button
         onClick={() => {
           setIsVisible(true);
-          const height = Math.min(window.innerHeight / 2, window.innerHeight - 50);
-          const top = Math.max(MARGIN_TOP, window.innerHeight - height - MARGIN_BOTTOM);
+          const availableHeight = window.innerHeight - MARGIN_TOP - MARGIN_BOTTOM;
+          const height = Math.max(MIN_HEIGHT, Math.min(availableHeight, window.innerHeight / 2));
+          const top = Math.min(
+            window.innerHeight - TITLEBAR_HEIGHT,
+            Math.max(MARGIN_TOP, window.innerHeight - initialHeight - MARGIN_BOTTOM)
+          );
+          //const height = Math.min(window.innerHeight / 2, window.innerHeight - 50);
+          //const top = Math.max(MARGIN_TOP, window.innerHeight - height - MARGIN_BOTTOM);
           const left = Math.max(MARGIN_RIGHT, window.innerWidth - initialWidth - MARGIN_RIGHT);
           setDimensions({ width: initialWidth, height });
           setPosition({ top, left });
