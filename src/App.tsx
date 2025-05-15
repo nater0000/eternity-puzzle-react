@@ -5,6 +5,9 @@ import PuzzleBoard from "./components/PuzzleBoard";
 import { loadLegacyPuzzle } from "./lib/loadLegacyPuzzle";
 import { allPieces } from "./data/pieces";
 import type { PuzzleBoardData } from "./types/puzzle";
+//import reactLogo from './assets/react.svg'
+//import viteLogo from '/vite.svg'
+import './App.css'
 
 const motifStyles = ["svg", "symbol"] as const;
 export type MotifStyle = (typeof motifStyles)[number];
@@ -48,31 +51,62 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Handles dropping a piece onto the board
+  // - Swaps the pieces
   const handleDropPiece = (index: number, pieceId: number, rotation: number = 0) => {
-    if (!puzzleData) return;
-
-    const piece = allPieces.find((p) => p.id === pieceId);
-    if (!piece) return;
-
-    const x = index % puzzleData.width;
-    const y = Math.floor(index / puzzleData.width);
-
-    const updatedBoard = [...puzzleData.board];
-    updatedBoard[index] = {
-      x,
-      y,
-      piece,
-      rotation,
-    };
-
-    const updatedPlaced = new Set(placedPieceIds);
-    updatedPlaced.add(pieceId);
-
-    const updatedRotations = { ...pieceRotations, [pieceId]: rotation };
-
-    setPuzzleData({ ...puzzleData, board: updatedBoard });
-    setPlacedPieceIds(updatedPlaced);
-    setPieceRotations(updatedRotations);
+      if (!puzzleData) return;
+  
+      const piece = allPieces.find((p) => p.id === pieceId);
+      if (!piece) return;
+  
+      const x = index % puzzleData.width;
+      const y = Math.floor(index / puzzleData.width);
+      const updatedBoard = [...puzzleData.board];
+  
+      // Find previous location of this piece
+      const prevIndex = updatedBoard.findIndex((cell) => cell.piece?.id === pieceId);
+  
+      // Capture piece being replaced
+      const replacedPiece = updatedBoard[index].piece;
+  
+      // Swap if both source and destination have pieces
+      if (prevIndex !== -1 && replacedPiece) {
+          // Place replacedPiece at old location
+          updatedBoard[prevIndex] = {
+              ...updatedBoard[prevIndex],
+              piece: replacedPiece,
+              rotation: pieceRotations[replacedPiece.id] ?? 0,
+          };
+      } else if (prevIndex !== -1) {
+          // Clear old location
+          updatedBoard[prevIndex] = {
+              ...updatedBoard[prevIndex],
+              piece: null,
+          };
+      }
+  
+      // Place dragged piece at new location
+      updatedBoard[index] = {
+          x,
+          y,
+          piece,
+          rotation,
+      };
+  
+      const updatedPlaced = new Set(placedPieceIds);
+      updatedPlaced.add(pieceId);
+      const updatedRotations = { ...pieceRotations };
+      updatedRotations[pieceId] = rotation;
+  
+      // Remove replaced piece if not swapped
+      if (replacedPiece && prevIndex === -1) {
+          updatedPlaced.delete(replacedPiece.id);
+          delete updatedRotations[replacedPiece.id];
+      }
+  
+      setPuzzleData({ ...puzzleData, board: updatedBoard });
+      setPlacedPieceIds(updatedPlaced);
+      setPieceRotations(updatedRotations);
   };
 
   const handleRemovePiece = (index: number) => {

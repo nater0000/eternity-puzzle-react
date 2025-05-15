@@ -19,15 +19,6 @@ const Piece: React.FC<Props> = ({ edges, id, motifStyle, rotation }) => {
     const symbolMap = motifStyle === "symbol" ? symbolSymbols : svgSymbols;
     const Component = symbolMap[edge];
 
-    console.log(
-      `Rendering motif for piece ${id} edge ${index} (${direction})`,
-      {
-        edge,
-        motifStyle,
-        hasComponent: !!Component,
-      }
-    );
-
     if (!Component) {
       console.warn(
         `Missing motif component for edge '${edge}' using style '${motifStyle}'`
@@ -62,7 +53,7 @@ const Piece: React.FC<Props> = ({ edges, id, motifStyle, rotation }) => {
   return (
     <svg
       viewBox="0 0 100 100"
-      className="w-full h-full"
+      className="noselect w-full h-full"
       shapeRendering="geometricPrecision"
       style={{ transform: `rotate(${rotation}deg)` }}
     >

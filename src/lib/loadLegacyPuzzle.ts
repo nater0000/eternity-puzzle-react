@@ -68,6 +68,11 @@ export function loadLegacyPuzzle(): PuzzleBoardData | null {
           rotation = rot;
         } else {
           console.warn(`Could not determine rotation for piece id=${id} at index ${i}`);
+          piece = {
+            id: pieceData.id,
+            edges: pieceData.edges,
+          };
+          rotation = 0;
         }
       }
     }

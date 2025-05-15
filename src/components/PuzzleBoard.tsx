@@ -1,118 +1,141 @@
 import React, { useEffect, useRef, useState } from "react";
-import type { BoardPosition } from "../types/puzzle";
 import Piece from "./Piece";
+import type { BoardPosition } from "../types/puzzle";
 import type { MotifStyle } from "../App";
 
 interface PuzzleBoardProps {
+  width: number;
+  height: number;
   board: BoardPosition[];
-  rows: number;
-  cols: number;
   motifStyle: MotifStyle;
-  pieceRotations: Record<number, number>;
-  onDropPiece: (id: number, x: number, y: number, rotation?: number) => void;
-  onRemovePiece: (id: number) => void;
-  onRotatePiece: (id: number, rotation: number) => void;
+  rotationMap: Record<number, number>;
+  onDropPiece: (index: number, pieceId: number, rotation: number) => void;
+  onRemovePiece: (index: number) => void;
+  onRotatePiece: (index: number) => void;
 }
 
 const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
+  width,
+  height,
   board,
-  rows,
-  cols,
   motifStyle,
-  pieceRotations,
+  rotationMap,
   onDropPiece,
   onRemovePiece,
   onRotatePiece,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [tileSize, setTileSize] = useState<number>(48);
+  const [squareSize, setSquareSize] = useState(50);
+  const padding = 8;
 
   useEffect(() => {
-    const updateTileSize = () => {
-      if (containerRef.current) {
-        const { clientWidth, clientHeight } = containerRef.current;
-        const padding = 16;
-        const availableWidth = clientWidth - padding;
-        const availableHeight = clientHeight - padding;
-        const newSize = Math.floor(Math.min(availableWidth / cols, availableHeight / rows));
-        setTileSize(Math.max(24, newSize));
-      }
+    const updateSize = () => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const { clientWidth, clientHeight } = container;
+
+      const maxSquareWidth = (clientWidth - padding * 2) / width;
+      const maxSquareHeight = (clientHeight - padding * 2) / height;
+      const newSize = Math.floor(Math.min(maxSquareWidth, maxSquareHeight));
+
+      setSquareSize(newSize);
     };
 
-    requestAnimationFrame(updateTileSize);
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, [width, height]);
 
-    const resizeObserver = new ResizeObserver(updateTileSize);
-    if (containerRef.current) resizeObserver.observe(containerRef.current);
-    return () => resizeObserver.disconnect();
-  }, [rows, cols]);
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>, x: number, y: number) => {
+  const handleDrop = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     const pieceIdStr = e.dataTransfer.getData("pieceId");
     const rotationStr = e.dataTransfer.getData("rotation");
+
     const pieceId = parseInt(pieceIdStr, 10);
-    const rotation = rotationStr ? parseInt(rotationStr, 10) : 0;
+    const rotation = parseInt(rotationStr, 10) || 0;
 
     if (!isNaN(pieceId)) {
-      onDropPiece(pieceId, x, y, rotation);
+      onDropPiece(index, pieceId, rotation);
     }
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+  };
+
+  const handleDragStart = (e: React.DragEvent, pieceId: number, rotation: number) => {
+    e.dataTransfer.setData("pieceId", pieceId.toString());
+    e.dataTransfer.setData("rotation", rotation.toString());
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    onRemovePiece(index);
   };
 
   return (
     <div
       ref={containerRef}
-      className="flex-grow flex justify-center items-center p-2 overflow-hidden"
+      style={{
+        flexGrow: 1,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        overflow: "hidden",
+        padding: `${padding}px`,
+      }}
     >
       <div
-        className="grid gap-0.5"
         style={{
-          gridTemplateColumns: `repeat(${cols}, ${tileSize}px)`,
-          gridTemplateRows: `repeat(${rows}, ${tileSize}px)`,
+          display: "grid",
+          gridTemplateColumns: `repeat(${width}, ${squareSize}px)`,
+          gridTemplateRows: `repeat(${height}, ${squareSize}px)`,
+          gap: 2,
         }}
       >
-        {Array.from({ length: rows * cols }, (_, index) => {
-          const x = index % cols;
-          const y = Math.floor(index / cols);
-          const position = board.find((p) => p.x === x && p.y === y);
-          const piece = position?.piece;
-
-          return (
-            <div
-              key={`${x}-${y}`}
-              onDrop={(e) => handleDrop(e, x, y)}
-              onDragOver={handleDragOver}
-              style={{
-                width: tileSize,
-                height: tileSize,
-                backgroundColor: "#e0e0e0",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              {piece && (
+        {board.map((cell, index) => (
+          <div
+            key={index}
+            onDrop={(e) => handleDrop(e, index)}
+            onDragOver={handleDragOver}
+            style={{
+              width: squareSize,
+              height: squareSize,
+              backgroundColor: "#f0f0f0",
+              border: "1px solid #ccc",
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              userSelect: "none", // Prevent text selection
+            }}
+          >
+            {cell.piece && (
+              <div
+                draggable
+                onDragStart={(e) =>
+                  handleDragStart(e, cell.piece!.id, rotationMap[cell.piece!.id] ?? 0)
+                }
+                onContextMenu={(e) => handleContextMenu(e, index)}
+                onClick={() => onRotatePiece(index)}
+                style={{
+                  width: squareSize,
+                  height: squareSize,
+                }}
+              >
                 <Piece
-                  id={piece.id}
-                  edges={piece.edges}
-                  rotation={pieceRotations[piece.id] ?? 0}
+                  id={cell.piece.id}
+                  edges={cell.piece.edges}
+                  rotation={rotationMap[cell.piece.id] ?? 0}
                   isDragging={false}
                   motifStyle={motifStyle}
-                  onClick={() =>
-                    onRotatePiece(piece.id, (pieceRotations[piece.id] ?? 0) + 1)
-                  }
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    onRemovePiece(piece.id);
-                  }}
                 />
-              )}
-            </div>
-          );
-        })}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
