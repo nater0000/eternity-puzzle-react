@@ -52,6 +52,8 @@ This project transforms the original static puzzle viewer into a dynamic, client
 - [ ] Add a "Clear Board" button with confirmation dialog (defaults to Cancel)
 - [ ] Add ghost drop preview effect on hovered targets
 - [ ] Add subtle animations to piece drop-ins and board transitions
+- [ ] Add a maximum size for board pieces
+- [ ] Create a better Title
 
 ### 🔐 Placement Constraints
 
