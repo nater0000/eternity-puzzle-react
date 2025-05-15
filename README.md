@@ -3,9 +3,9 @@
 Welcome to the interactive **Eternity II puzzle solver**, built with **React**, **TypeScript**, **Vite**, and styled using **TailwindCSS**.  
 This project transforms the original static puzzle viewer into a dynamic, client-side drag-and-drop playground 🎯.
 
-[![Deploy to GitHub Pages](https://github.com/nater0000/eternity-puzzle-react/actions/workflows/deploy.yml/badge.svg)](https://github.com/nater0000/eternity-puzzle-react/actions/workflows/deploy.yml)
-
-<sub>🚀 <strong>Deployed to:</strong> <a href="https://e2.rickey.io">e2.rickey.io</a></sub>
+#
+<sub>[![Using GitHub Pages](https://github.com/nater0000/eternity-puzzle-react/actions/workflows/deploy.yml/badge.svg)](https://github.com/nater0000/eternity-puzzle-react/actions/workflows/deploy.yml)</sub>
+<br><sub>🚀 **Deployed to:** https://e2.rickey.io</sub>
 
 ---
 
@@ -20,39 +20,81 @@ This project transforms the original static puzzle viewer into a dynamic, client
 
 ---
 
-## 📦 Project Features (Planned)
+## 🧠 Features & Behavior
 
-- ✅ React architecture scaffolded  
-- ✅ TailwindCSS fully integrated  
-- 🧱 Puzzle board rendered via SVG
-- 🖱️ Drag-and-drop support with multi-selection
-- 🧮 Live conflict detection and scoring
-- 📋 Sidebar of unused pieces
-- 💾 Save/load board state locally
-- ✅ GitHub Actions CI for auto builds
+- 🧩 Drag-and-drop support for placing and rearranging pieces
+- 🔁 Smooth internal swapping logic for placed pieces
+- 🎮 Cancel or revert dropped pieces if released off-board
+- 📦 Pop-up Piece Palette with rotation + drag handling
+- 🧭 Rotation-aware motif rendering and edge positioning
+- 🧮 Responsive board scaling to fit view
+- 🎨 Toggle between SVG and Symbol motif styles
+- 🧪 Board state auto-loaded from the URL
+- ✨ Animated drop effects and hover previews
 
 ---
 
-## 📈 Progress Tracker
+## 🔨 Roadmap
 
-| Feature                     | Status         |
-|----------------------------|----------------|
-| Vite + Tailwind setup      | ✅ Done         |
-| GitHub repo + CI workflow  | ✅ Done         |
-| PuzzleBoard component      | 🔧 In Progress  |
-| Piece drag-and-drop logic  | 🔲 Planned      |
-| Sidebar + piece selector   | 🔲 Planned      |
+### 🐞 Bugs & Fixes
+
+- [ ] Prevent multiple motifs from rendering simultaneously on some pieces
+- [ ] Ensure piece numbers are clearly visible in PiecePalette (increase font size)
+- [ ] Fix triangle rendering for both motif types (rotate 90° and stretch to fill)
+- [ ] Piece rotation should shift edge mapping — not visually rotate numbers
+- [ ] Prevent overpopulation: only load as many pieces as needed for board size
+
+### ✨ UX Improvements
+
+- [ ] Position the PiecePalette at the top of the window by default
+- [ ] Move "Show Pieces" button under the "Motif Style" selector
+- [ ] Add a "Rotate Board" button (clockwise 90°) and update all rotations
+- [ ] Add a "Clear Board" button with confirmation dialog (defaults to Cancel)
+- [ ] Add ghost drop preview effect on hovered targets
+- [ ] Add subtle animations to piece drop-ins and board transitions
+
+### 🔐 Placement Constraints
+
+- [ ] Prevent corner pieces (2 sides with color 0) from being placed anywhere but corners
+- [ ] Prevent edge pieces (1 side with color 0) from being placed anywhere but edges
+- [ ] Prevent center pieces (0 sides with color 0) from being placed in corners or edges
+- [ ] Auto-rotate corner and edge pieces to align color 0 with the outside border
+
+---
+
+## 🧱 Development Status
+
+| Component/Feature            | Status         |
+|-----------------------------|----------------|
+| App layout & CSS foundation | ✅ Complete     |
+| PuzzleBoard grid & pieces   | ✅ Complete     |
+| Drag and drop logic         | ✅ Complete     |
+| PiecePalette with overlay   | ✅ Complete     |
+| URL-based puzzle loader     | ✅ Complete     |
+| Viewport responsiveness     | ✅ Complete     |
+| Motif rendering logic       | 🔧 In Progress  |
+| Piece rotation support      | 🔧 In Progress  |
+| Clear/Rotate board          | 🔲 Planned      |
+| UX enhancements             | 🔲 Planned      |
+| Edge/corner logic rules     | 🔲 Planned      |
+| Export/import board state   | 🔲 Planned      |
 
 ---
 
 ## 🚀 Getting Started
 
-```bash
+Run the following commands:
+
+```
 npm install
 npm run dev
 ```
-This runs the local development environment at `localhost:5173`:
-Then open [http://localhost:5173](http://localhost:5173) in your browser.
+
+Then open your browser to:
+
+```
+http://localhost:5173
+```
 
 ---
 
