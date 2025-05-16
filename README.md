@@ -41,7 +41,7 @@ This project transforms the original static puzzle viewer into a dynamic, client
 - [x] Ensure piece numbers are clearly visible in PiecePalette (increase font size)
 - [x] Piece rotation should shift edge mapping — not visually rotate numbers
 - [x] Fix svg motif consistency
-- [ ] Fix Rotations when swapping edges/corners
+- [x] Fix Rotations when swapping edges/corners
 - [ ] Fix symbol motifs
 - [ ] Support motifs_order parameter on url load
 - [ ] Prevent overpopulation: only load as many pieces as needed for board size
@@ -55,7 +55,7 @@ This project transforms the original static puzzle viewer into a dynamic, client
 - [x] Add a "Clear Board" button with confirmation dialog (defaults to Cancel)
 - [x] Add a maximum size for board pieces
 - [x] Create a better Title
-- [ ] Convert 'Constraint' alerts into notification banners
+- [x] Convert 'Constraint' alerts into notification banners
 - [ ] Make Piece Palette start taller and below the Control Panel
 - [ ] Make 'Show Pieces' and 'Hide Pieces' button the same width
 - [ ] Rename 'Show/Hide Pieces' to 'Show/Hide Palette'

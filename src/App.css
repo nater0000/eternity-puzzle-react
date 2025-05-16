@@ -50,9 +50,50 @@ body,
     -webkit-user-select: none;
     -ms-user-select: none;
 }
-/* App.css */
+
 * {
     user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
+}
+
+.notification-banner {
+    position: fixed; /* Or absolute if .app-root is the positioning context */
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333; /* Dark background to fit the theme */
+    color: #f0f0f0; /* Light text */
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000; /* Ensure it's above other elements */
+    font-size: 0.95em;
+    text-align: center;
+    min-width: 250px; /* Ensure it's wide enough for messages */
+    max-width: 80%;
+    /* Animation */
+    animation: fadeInOut 3s ease-in-out forwards;
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -20px); /* Start slightly above and faded out */
+    }
+
+    10% { /* Fade in quickly */
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+
+    90% { /* Stay visible for most of the duration */
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+
+    100% { /* Fade out */
+        opacity: 0;
+        transform: translate(-50%, -10px); /* End slightly above and faded out */
+    }
 }
