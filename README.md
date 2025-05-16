@@ -40,7 +40,8 @@ This project transforms the original static puzzle viewer into a dynamic, client
 
 - [x] Ensure piece numbers are clearly visible in PiecePalette (increase font size)
 - [x] Piece rotation should shift edge mapping — not visually rotate numbers
-- [ ] Fix svg motif consistency
+- [x] Fix svg motif consistency
+- [ ] Fix Rotations when swapping edges/corners
 - [ ] Fix symbol motifs
 - [ ] Support motifs_order parameter on url load
 - [ ] Prevent overpopulation: only load as many pieces as needed for board size
