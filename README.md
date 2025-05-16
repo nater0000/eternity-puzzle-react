@@ -39,22 +39,32 @@ This project transforms the original static puzzle viewer into a dynamic, client
 ### 🐞 Bugs & Fixes
 
 - [x] Ensure piece numbers are clearly visible in PiecePalette (increase font size)
+- [x] Piece rotation should shift edge mapping — not visually rotate numbers
 - [ ] Fix svg motif consistency
 - [ ] Fix symbol motifs
-- [x] Piece rotation should shift edge mapping — not visually rotate numbers
+- [ ] Support motifs_order parameter on url load
 - [ ] Prevent overpopulation: only load as many pieces as needed for board size
+- [ ] Fix Piece Palette changing height when window is resized horizontally
 
 ### ✨ UX Improvements
 
-- [x] Position the PiecePalette at the top of the window by default
+- [x] Position the Piece Palette at the top of the window by default
 - [x] Move "Show Pieces" button under the "Motif Style" selector
 - [x] Add a "Rotate Board" button (clockwise 90°) and update all rotations
 - [x] Add a "Clear Board" button with confirmation dialog (defaults to Cancel)
-- [ ] Add ghost drop preview effect on hovered targets
-- [ ] Add subtle animations to piece drop-ins and board transitions
 - [x] Add a maximum size for board pieces
 - [x] Create a better Title
-- [ ] Make PiecePalette default slightly lower than the Control Panel
+- [ ] Convert 'Constraint' alerts into notification banners
+- [ ] Make Piece Palette start taller and below the Control Panel
+- [ ] Make 'Show Pieces' and 'Hide Pieces' button the same width
+- [ ] Rename 'Show/Hide Pieces' to 'Show/Hide Palette'
+- [ ] Implement Conflict Scoring
+- [ ] Add Score display
+- [ ] Add support to load known puzzles
+- [ ] Allow Piece Palette to be embedded instead of floating
+- [ ] Add display toggles for 'Piece Number', 'Type', 'Score', 'Conflicts'
+- [ ] Add ghost drop preview effect on hovered targets
+- [ ] Add subtle animations to piece drop-ins and board transitions
 
 ### 🔐 Placement Constraints
 
@@ -103,7 +113,7 @@ http://localhost:5173
 
 ## 👨‍💻 Author
 
-Made with love 💙 by [@nater0000](https://github.com/nater0000)
+Made with love 🧩💙🤖 by [@nater0000](https://github.com/nater0000)
 
 ---
 
