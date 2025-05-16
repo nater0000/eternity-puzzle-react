@@ -38,29 +38,30 @@ This project transforms the original static puzzle viewer into a dynamic, client
 
 ### 🐞 Bugs & Fixes
 
-- [ ] Prevent multiple motifs from rendering simultaneously on some pieces
-- [ ] Ensure piece numbers are clearly visible in PiecePalette (increase font size)
-- [ ] Fix triangle rendering for both motif types (rotate 90° and stretch to fill)
-- [ ] Piece rotation should shift edge mapping — not visually rotate numbers
+- [x] Ensure piece numbers are clearly visible in PiecePalette (increase font size)
+- [ ] Fix svg motif consistency
+- [ ] Fix symbol motifs
+- [x] Piece rotation should shift edge mapping — not visually rotate numbers
 - [ ] Prevent overpopulation: only load as many pieces as needed for board size
 
 ### ✨ UX Improvements
 
-- [ ] Position the PiecePalette at the top of the window by default
-- [ ] Move "Show Pieces" button under the "Motif Style" selector
-- [ ] Add a "Rotate Board" button (clockwise 90°) and update all rotations
-- [ ] Add a "Clear Board" button with confirmation dialog (defaults to Cancel)
+- [x] Position the PiecePalette at the top of the window by default
+- [x] Move "Show Pieces" button under the "Motif Style" selector
+- [x] Add a "Rotate Board" button (clockwise 90°) and update all rotations
+- [x] Add a "Clear Board" button with confirmation dialog (defaults to Cancel)
 - [ ] Add ghost drop preview effect on hovered targets
 - [ ] Add subtle animations to piece drop-ins and board transitions
-- [ ] Add a maximum size for board pieces
-- [ ] Create a better Title
+- [x] Add a maximum size for board pieces
+- [x] Create a better Title
+- [ ] Make PiecePalette default slightly lower than the Control Panel
 
 ### 🔐 Placement Constraints
 
-- [ ] Prevent corner pieces (2 sides with color 0) from being placed anywhere but corners
-- [ ] Prevent edge pieces (1 side with color 0) from being placed anywhere but edges
-- [ ] Prevent center pieces (0 sides with color 0) from being placed in corners or edges
-- [ ] Auto-rotate corner and edge pieces to align color 0 with the outside border
+- [x] Prevent corner pieces (2 sides with color 0) from being placed anywhere but corners
+- [x] Prevent edge pieces (1 side with color 0) from being placed anywhere but edges
+- [x] Prevent center pieces (0 sides with color 0) from being placed in corners or edges
+- [x] Auto-rotate corner and edge pieces to align color 0 with the outside border
 
 ---
 
@@ -74,11 +75,11 @@ This project transforms the original static puzzle viewer into a dynamic, client
 | PiecePalette with overlay   | ✅ Complete     |
 | URL-based puzzle loader     | ✅ Complete     |
 | Viewport responsiveness     | ✅ Complete     |
+| Piece rotation support      | ✅ Complete     |
+| Clear/Rotate board          | ✅ Complete     |
+| Edge/corner logic rules     | ✅ Complete     |
 | Motif rendering logic       | 🔧 In Progress  |
-| Piece rotation support      | 🔧 In Progress  |
-| Clear/Rotate board          | 🔲 Planned      |
-| UX enhancements             | 🔲 Planned      |
-| Edge/corner logic rules     | 🔲 Planned      |
+| UX enhancements             | 🔧 In Progress  |
 | Export/import board state   | 🔲 Planned      |
 
 ---
