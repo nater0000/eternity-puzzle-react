@@ -7,10 +7,11 @@ import { allPieces } from "./data/pieces";
 import type { PuzzleBoardData, BoardPosition } from "./types/puzzle";
 import './App.css';
 
+const gitRepoUrl = "https://github.com/nater0000/eternity-puzzle-react"; // As per your last version
 const motifStyles = ["svg", "symbol"] as const;
 export type MotifStyle = (typeof motifStyles)[number];
 
-const BORDER_MOTIF = 'a'; // IMPORTANT: Ensure this matches your border motif character
+const BORDER_MOTIF = 'a';
 
 type PieceTypeClassification = 'corner' | 'edge' | 'center';
 
@@ -18,7 +19,7 @@ const getEffectiveEdges = (edges: [string, string, string, string], rotation: nu
     const currentEdges = [...edges] as [string, string, string, string];
     if (rotation === 0) return currentEdges;
     const N = currentEdges.length;
-    const r = ((rotation % N) + N) % N; // Ensure positive rotation index
+    const r = ((rotation % N) + N) % N;
     const rotated = [];
     for (let i = 0; i < N; i++) {
         rotated.push(currentEdges[(i - r + N) % N]);
@@ -39,11 +40,14 @@ const App: React.FC = () => {
     const [placedPieceIds, setPlacedPieceIds] = useState<Set<number>>(new Set());
     const [pieceRotations, setPieceRotations] = useState<Record<number, number>>({});
     const [isPiecePaletteVisible, setIsPiecePaletteVisible] = useState(true);
+    const [controlPanelHeight, setControlPanelHeight] = useState(0); // State for ControlPanel height
 
-    // --- Notification State and Ref ---
     const [notification, setNotification] = useState<{ message: string; id: number } | null>(null);
-    // Corrected type for browser setTimeout ID
     const notificationTimeoutRef = useRef<number | null>(null);
+
+    const handleControlPanelHeight = useCallback((height: number) => {
+        setControlPanelHeight(height);
+    }, []);
 
     useEffect(() => {
         document.title = "Eternity II Puzzle Playground";
@@ -74,18 +78,15 @@ const App: React.FC = () => {
         }
     }, []);
 
-    // --- showNotification Function ---
     const showNotification = useCallback((message: string) => {
-        if (notificationTimeoutRef.current !== null) { // Check against null
+        if (notificationTimeoutRef.current !== null) {
             clearTimeout(notificationTimeoutRef.current);
         }
         setNotification({ message, id: Date.now() });
-
-        // window.setTimeout returns a number in browsers
         notificationTimeoutRef.current = window.setTimeout(() => {
             setNotification(null);
             notificationTimeoutRef.current = null;
-        }, 3000); // Display for 3 seconds
+        }, 3000);
     }, []);
 
     const handleDropPiece = (targetCellIndex: number, droppedPieceId: number, draggedPieceInitialRotation: number = 0, originalIndex: number) => {
@@ -197,7 +198,7 @@ const App: React.FC = () => {
                     const isOriginalCellCorner = (originalCellX === 0 && originalCellY === 0) || (originalCellX === boardWidth - 1 && originalCellY === 0) || (originalCellX === 0 && originalCellY === boardHeight - 1) || (originalCellX === boardWidth - 1 && originalCellY === boardHeight - 1);
                     const isOriginalCellEdge = !isOriginalCellCorner && (originalCellX === 0 || originalCellX === boardWidth - 1 || originalCellY === 0 || originalCellY === boardHeight - 1);
 
-                    if ((swappedPieceClassification === 'corner' || swappedPieceClassification === 'edge') && (isOriginalCellCorner || isOriginalCellEdge)) { // Added check if destination is border/corner
+                    if ((swappedPieceClassification === 'corner' || swappedPieceClassification === 'edge') && (isOriginalCellCorner || isOriginalCellEdge)) {
                         let validRotationForSwappedFound = false;
                         for (let r = 0; r < 4; r++) {
                             const effectiveEdgesSwapped = getEffectiveEdges(swappedPieceFullData.edges, r);
@@ -281,7 +282,6 @@ const App: React.FC = () => {
         setPuzzleData({ ...puzzleData, board: updatedBoard });
         setPlacedPieceIds(updatedPlaced);
         setPieceRotations(updatedRotations);
-        // console.log(`App: Removed piece ${removedPiece.id} from index ${index}.`);
     };
 
     const handleRotatePieceOnBoard = (index: number) => {
@@ -357,13 +357,11 @@ const App: React.FC = () => {
         const updatedBoard = [...puzzleData.board];
         updatedBoard[index] = { ...updatedBoard[index], rotation: newProposedRotation };
         setPuzzleData({ ...puzzleData, board: updatedBoard });
-        // console.log(`App: Rotated piece ${pieceId} at index ${index} to ${newProposedRotation * 90}°`);
     };
 
     const handleRotatePalettePiece = (pieceId: number, currentPaletteRotation: number) => {
         const newRotation = (currentPaletteRotation + 1) % 4;
         setPieceRotations(prev => ({ ...prev, [pieceId]: newRotation }));
-        // console.log(`App: Rotated palette piece ${pieceId} to ${newRotation * 90}°`);
     };
 
     const handleClearBoard = () => {
@@ -373,7 +371,6 @@ const App: React.FC = () => {
             setPuzzleData({ ...puzzleData, board: newBoard });
             setPlacedPieceIds(new Set());
             setPieceRotations({});
-            // console.log("App: Board cleared.");
         }
     };
 
@@ -407,7 +404,6 @@ const App: React.FC = () => {
         }
         setPuzzleData({ width: newWidth, height: newHeight, board: newBoard });
         setPieceRotations(newPieceRotationsState);
-        // console.log("App: Board rotated.");
     };
 
     if (!puzzleData) {
@@ -416,7 +412,6 @@ const App: React.FC = () => {
 
     return (
         <div className="app-root">
-            {/* Notification Banner */}
             {notification && (
                 <div key={notification.id} className="notification-banner">
                     {notification.message}
@@ -431,7 +426,23 @@ const App: React.FC = () => {
                 onRotateBoard={handleRotateBoard}
                 isPiecePaletteVisible={isPiecePaletteVisible}
                 togglePiecePalette={() => setIsPiecePaletteVisible(!isPiecePaletteVisible)}
+                githubRepoUrl={gitRepoUrl}
+                reportHeight={handleControlPanelHeight} // Pass callback to get height
             />
+
+            {/* Piece Palette is rendered after ControlPanel. Its initial top position will be adjusted. */}
+            {isPiecePaletteVisible && controlPanelHeight > 0 && ( // Ensure controlPanelHeight is measured before rendering
+                <PiecePalette
+                    placedPieceIds={placedPieceIds}
+                    motifStyle={motifStyle}
+                    onDragStart={() => { }}
+                    onDragEnd={() => { }}
+                    onRotatePiece={handleRotatePalettePiece}
+                    pieceRotations={pieceRotations}
+                    onClose={() => setIsPiecePaletteVisible(false)}
+                    initialTopOffset={controlPanelHeight + 8} // Pass the offset (height + margin)
+                />
+            )}
             <div className="board-wrapper">
                 <PuzzleBoard
                     width={puzzleData.width}
@@ -444,17 +455,6 @@ const App: React.FC = () => {
                     onRotatePiece={handleRotatePieceOnBoard}
                 />
             </div>
-            {isPiecePaletteVisible && (
-                <PiecePalette
-                    placedPieceIds={placedPieceIds}
-                    motifStyle={motifStyle}
-                    onDragStart={() => { }}
-                    onDragEnd={() => { }}
-                    onRotatePiece={handleRotatePalettePiece}
-                    pieceRotations={pieceRotations}
-                    onClose={() => setIsPiecePaletteVisible(false)}
-                />
-            )}
         </div>
     );
 };
