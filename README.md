@@ -42,10 +42,10 @@ This project transforms the original static puzzle viewer into a dynamic, client
 - [x] Piece rotation should shift edge mapping — not visually rotate numbers
 - [x] Fix svg motif consistency
 - [x] Fix Rotations when swapping edges/corners
-- [ ] Fix symbol motifs
+- [x] Fix symbol motifs
 - [ ] Support motifs_order parameter on url load
-- [ ] Prevent overpopulation: only load as many pieces as needed for board size
 - [ ] Fix Piece Palette changing height when window is resized horizontally
+- [ ] Fix piece dropping not always detected
 
 ### ✨ UX Improvements
 
@@ -56,16 +56,23 @@ This project transforms the original static puzzle viewer into a dynamic, client
 - [x] Add a maximum size for board pieces
 - [x] Create a better Title
 - [x] Convert 'Constraint' alerts into notification banners
+- [ ] Support Mobile form factor: zoom, move, scroll palette, drag pieces
 - [ ] Make Piece Palette start taller and below the Control Panel
 - [ ] Make 'Show Pieces' and 'Hide Pieces' button the same width
 - [ ] Rename 'Show/Hide Pieces' to 'Show/Hide Palette'
-- [ ] Implement Conflict Scoring
+- [ ] Add Conflict Scoring
+- [ ] Add Type overlay
 - [ ] Add Score display
 - [ ] Add support to load known puzzles
 - [ ] Allow Piece Palette to be embedded instead of floating
-- [ ] Add display toggles for 'Piece Number', 'Type', 'Score', 'Conflicts'
+- [ ] Add display toggles for 'Piece Number'
+- [ ] Add display toggles for 'Type'
+- [ ] Add display toggles for 'Score'
+- [ ] Add display toggles for 'Conflicts'
 - [ ] Add ghost drop preview effect on hovered targets
 - [ ] Add subtle animations to piece drop-ins and board transitions
+- [ ] Generate and Copy URL
+- [ ] Support custom piece lists
 
 ### 🔐 Placement Constraints
 
@@ -89,7 +96,7 @@ This project transforms the original static puzzle viewer into a dynamic, client
 | Piece rotation support      | ✅ Complete     |
 | Clear/Rotate board          | ✅ Complete     |
 | Edge/corner logic rules     | ✅ Complete     |
-| Motif rendering logic       | 🔧 In Progress  |
+| Motif rendering logic       | ✅ Complete     |
 | UX enhancements             | 🔧 In Progress  |
 | Export/import board state   | 🔲 Planned      |
 

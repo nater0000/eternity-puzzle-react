@@ -15,7 +15,7 @@ interface PuzzleBoardProps {
 }
 
 const MAX_PIECE_SIZE = 120;
-const MIN_PIECE_SIZE = 30;
+const MIN_PIECE_SIZE = 17;
 
 const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     width,

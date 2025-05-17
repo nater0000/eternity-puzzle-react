@@ -53,7 +53,7 @@ const Piece: React.FC<Props> = ({ edges, id, motifStyle, rotation }) => {
     };
 
     const groupRotation = `rotate(${rotation} 50 50)`;
-    const fontSize = 36;
+    const fontSize = 30;
 
     return (
         <svg
