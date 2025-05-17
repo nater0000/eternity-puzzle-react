@@ -56,6 +56,9 @@ This project transforms the original static puzzle viewer into a dynamic, client
 - [x] Add a maximum size for board pieces
 - [x] Create a better Title
 - [x] Convert 'Constraint' alerts into notification banners
+- [ ] Make the Control Panel text/buttons vertically smaller
+- [ ] Add a hamburger button in the upper left to hide/show the Control Panel
+- [ ] Add an Image that links to the github repo into the Control Panel
 - [ ] Support Mobile form factor: zoom, move, scroll palette, drag pieces
 - [ ] Make Piece Palette start taller and below the Control Panel
 - [ ] Make 'Show Pieces' and 'Hide Pieces' button the same width

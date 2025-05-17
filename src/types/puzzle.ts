@@ -24,5 +24,4 @@ export type PuzzleBoardData = {
   width: number;
   height: number;
   board: BoardPosition[];
-//  motif: string;
 };
