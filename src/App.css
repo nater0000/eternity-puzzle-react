@@ -5,95 +5,104 @@ body,
     padding: 0;
     height: 100%;
     width: 100%;
-    overflow: hidden;
+    overflow: hidden; /* Prevent scrollbars on the root */
 }
 
 .app-root {
     height: 100%;
     width: 100%;
-    background-color: #18181b;
+    background-color: #18181b; /* Dark background for the app */
     color: white;
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* Prevent scrollbars on the app root */
 }
 
 .board-wrapper {
-    flex: 1;
+    flex: 1; /* Allows the board wrapper to take remaining vertical space */
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 8px;
-    overflow: hidden;
+    padding: 8px; /* Padding around the board itself */
+    overflow: hidden; /* Prevent scrollbars if board is too big for wrapper */
+    box-sizing: border-box; /* Ensures padding is included in height calculation */
+    position: relative; /* Needed if children are absolutely positioned relative to it, though not currently the case */
 }
 
 .load-error {
     padding: 1rem;
-    border: 1px solid #f87171;
-    color: #fca5a5;
-    background: #1e1b4b;
+    border: 1px solid #f87171; /* Red border for errors */
+    color: #fca5a5; /* Light red text */
+    background: #1e1b4b; /* Dark blue/purple background */
     border-radius: 6px;
 }
 
+/* Styles for puzzle pieces, can be expanded */
 .puzzle-piece {
-    user-select: none;
-}
-.piece {
-    transition: transform 0.2s ease-in-out;
-}
-.drop-preview {
-    opacity: 0.4;
-    pointer-events: none;
+    user-select: none; /* Prevent text selection on pieces */
 }
 
+.piece {
+    transition: transform 0.2s ease-in-out; /* Smooth rotation transition */
+}
+
+.drop-preview {
+    opacity: 0.4; /* Visual feedback for potential drop location */
+    pointer-events: none; /* Preview should not interfere with drop events */
+}
+
+/* Utility class to prevent text selection */
 .noselect {
     user-select: none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE/Edge */
 }
 
+/* Global user-select none can be aggressive. Consider applying only where needed. */
+/* For now, keeping it as per your existing CSS */
 * {
     user-select: none;
     -webkit-user-select: none;
     -ms-user-select: none;
 }
 
+/* Notification banner styles */
 .notification-banner {
-    position: fixed; /* Or absolute if .app-root is the positioning context */
+    position: fixed;
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #333; /* Dark background to fit the theme */
-    color: #f0f0f0; /* Light text */
+    background-color: #333;
+    color: #f0f0f0;
     padding: 12px 24px;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    z-index: 1000; /* Ensure it's above other elements */
+    z-index: 1000; /* High z-index to appear on top */
     font-size: 0.95em;
     text-align: center;
-    min-width: 250px; /* Ensure it's wide enough for messages */
+    min-width: 250px;
     max-width: 80%;
-    /* Animation */
-    animation: fadeInOut 3s ease-in-out forwards;
+    animation: fadeInOut 3s ease-in-out forwards; /* Fade in/out animation */
 }
 
 @keyframes fadeInOut {
     0% {
         opacity: 0;
-        transform: translate(-50%, -20px); /* Start slightly above and faded out */
+        transform: translate(-50%, -20px);
     }
 
-    10% { /* Fade in quickly */
+    10% {
         opacity: 1;
         transform: translate(-50%, 0);
     }
 
-    90% { /* Stay visible for most of the duration */
+    90% {
         opacity: 1;
         transform: translate(-50%, 0);
     }
 
-    100% { /* Fade out */
+    100% {
         opacity: 0;
-        transform: translate(-50%, -10px); /* End slightly above and faded out */
+        transform: translate(-50%, -10px);
     }
 }

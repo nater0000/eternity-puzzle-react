@@ -11,16 +11,15 @@ interface PiecePaletteProps {
     onRotatePiece: (id: number, currentRotation: number) => void;
     pieceRotations: Record<number, number>;
     onClose: () => void;
-    initialTopOffset?: number; // New prop for initial top position based on ControlPanel height
+    initialTopOffset?: number; // This will now be influenced by ControlPanel's content visibility
 }
 
-const MIN_WIDTH = 220; // Slightly increased min width
-const MIN_HEIGHT = 200; // Increased min height for "taller" start
+const MIN_WIDTH = 220;
+const MIN_HEIGHT = 200;
 const MARGIN_RIGHT = 12;
 const MARGIN_BOTTOM = 12;
-// MARGIN_TOP is now effectively controlled by initialTopOffset, but keep for clamping
-const PALETTE_MARGIN_TOP_FALLBACK = 8;
-const TITLEBAR_HEIGHT = 28; // Adjusted to better match ControlPanel's new smaller height
+const PALETTE_MARGIN_TOP_FALLBACK = 40; // Default top margin if ControlPanel content is hidden (to clear hamburger/git icon)
+const TITLEBAR_HEIGHT = 28;
 
 const PiecePalette: React.FC<PiecePaletteProps> = ({
     placedPieceIds,
@@ -30,54 +29,53 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
     onRotatePiece,
     pieceRotations,
     onClose,
-    initialTopOffset, // Use this for initial positioning
+    initialTopOffset,
 }) => {
     const unplacedPieces = allPieces.filter((piece) => !placedPieceIds.has(piece.id));
 
     const initialWidth = 300;
-    // Make it taller: use a larger portion of window height, and increased MIN_HEIGHT
-    const calculatedInitialHeight = Math.max(MIN_HEIGHT, Math.min(window.innerHeight - (initialTopOffset || PALETTE_MARGIN_TOP_FALLBACK) - MARGIN_BOTTOM, window.innerHeight * 0.55));
+    // Use the provided initialTopOffset (which considers ControlPanel state) or fallback
+    const effectiveInitialTop = initialTopOffset !== undefined ? initialTopOffset : PALETTE_MARGIN_TOP_FALLBACK;
 
-    // Use initialTopOffset if provided, otherwise fallback to a small margin from top of viewport
-    const initialTop = initialTopOffset || PALETTE_MARGIN_TOP_FALLBACK;
+    const calculatedInitialHeight = Math.max(MIN_HEIGHT, Math.min(window.innerHeight - effectiveInitialTop - MARGIN_BOTTOM, window.innerHeight * 0.55));
     const initialLeft = Math.max(MARGIN_RIGHT, window.innerWidth - initialWidth - MARGIN_RIGHT);
 
     const [dimensions, setDimensions] = useState({ width: initialWidth, height: calculatedInitialHeight });
-    const [position, setPosition] = useState({ top: initialTop, left: initialLeft });
+    const [position, setPosition] = useState({ top: effectiveInitialTop, left: initialLeft });
     const dragOffset = useRef({ x: 0, y: 0 });
-    const isInitialized = useRef(false); // To prevent initial useEffect from overriding calculated position
+    const isInitialized = useRef(false);
 
-    // Effect to set initial position and dimensions once initialTopOffset is available
     useEffect(() => {
-        if (initialTopOffset && !isInitialized.current) {
-            const newInitialHeight = Math.max(MIN_HEIGHT, Math.min(window.innerHeight - initialTopOffset - MARGIN_BOTTOM, window.innerHeight * 0.55));
+        // This effect now correctly uses effectiveInitialTop which is derived from the prop or a fallback.
+        // It helps in setting the initial state correctly.
+        if (!isInitialized.current) {
+            const newInitialHeight = Math.max(MIN_HEIGHT, Math.min(window.innerHeight - effectiveInitialTop - MARGIN_BOTTOM, window.innerHeight * 0.55));
             const newInitialLeft = Math.max(MARGIN_RIGHT, window.innerWidth - initialWidth - MARGIN_RIGHT);
 
-            setPosition({ top: initialTopOffset, left: newInitialLeft });
+            setPosition({ top: effectiveInitialTop, left: newInitialLeft });
             setDimensions({ width: initialWidth, height: newInitialHeight });
             isInitialized.current = true;
         }
-    }, [initialTopOffset, initialWidth]);
+    }, [effectiveInitialTop, initialWidth]); // Depend on effectiveInitialTop
 
 
     useEffect(() => {
-        // This effect now primarily handles window resize adjustments AFTER initial setup
         const handleWindowResize = () => {
-            if (!isInitialized.current) return; // Don't run if not yet initialized with offset
+            if (!isInitialized.current) return;
 
-            const newAvailableHeight = window.innerHeight - (position.top) - MARGIN_BOTTOM; // Use current top
-            const currentHeight = dimensions.height;
-            const newHeight = Math.max(MIN_HEIGHT, Math.min(currentHeight, newAvailableHeight));
-            const currentWidth = dimensions.width;
+            const currentTop = position.top; // Use current position.top
+            const newAvailableHeight = window.innerHeight - currentTop - MARGIN_BOTTOM;
+            const newHeight = Math.max(MIN_HEIGHT, Math.min(dimensions.height, newAvailableHeight));
 
             setPosition((pos) => ({
                 top: Math.min(
-                    Math.max(PALETTE_MARGIN_TOP_FALLBACK, pos.top), // Ensure it doesn't go above a minimum top margin
+                    // Allow dragging up to a minimal margin, or the original offset if it was higher
+                    Math.max(PALETTE_MARGIN_TOP_FALLBACK, pos.top),
                     window.innerHeight - TITLEBAR_HEIGHT - MARGIN_BOTTOM
                 ),
                 left: Math.min(
                     Math.max(MARGIN_RIGHT, pos.left),
-                    window.innerWidth - currentWidth - MARGIN_RIGHT
+                    window.innerWidth - dimensions.width - MARGIN_RIGHT
                 ),
             }));
             setDimensions(dims => ({
@@ -87,13 +85,12 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
         };
 
         window.addEventListener("resize", handleWindowResize);
-        // Initial call might not be needed if first useEffect handles it, or call it if initialTopOffset is not provided
-        if (!initialTopOffset) {
-            handleWindowResize();
-        }
+        // Call once on mount if initialized, to ensure correct sizing based on initial position
+        if (isInitialized.current) handleWindowResize();
+
 
         return () => window.removeEventListener("resize", handleWindowResize);
-    }, [dimensions.height, dimensions.width, initialTopOffset, position.top]); // Added dependencies
+    }, [dimensions.width, dimensions.height, position.top]); // Reworked dependencies
 
 
     const handlePalettePieceClick = (id: number) => {
@@ -144,10 +141,11 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
             const proposedLeft = moveEvent.clientX - dragOffset.current.x;
             const proposedTop = moveEvent.clientY - dragOffset.current.y;
 
-            // Ensure palette top respects the initialTopOffset as a minimum when dragging
-            const minTop = initialTopOffset ? Math.max(PALETTE_MARGIN_TOP_FALLBACK, initialTopOffset) : PALETTE_MARGIN_TOP_FALLBACK;
+            // When dragging, ensure it doesn't go above a certain minimum (like PALETTE_MARGIN_TOP_FALLBACK)
+            // or the initial offset if that was dynamically set to be lower (e.g. when control panel is visible)
+            const minTopForDragging = initialTopOffset !== undefined ? Math.min(initialTopOffset, PALETTE_MARGIN_TOP_FALLBACK) : PALETTE_MARGIN_TOP_FALLBACK;
 
-            const clampedTop = Math.min(window.innerHeight - dimensions.height - MARGIN_BOTTOM, Math.max(minTop, proposedTop));
+            const clampedTop = Math.min(window.innerHeight - dimensions.height - MARGIN_BOTTOM, Math.max(minTopForDragging, proposedTop));
             const clampedLeft = Math.min(window.innerWidth - dimensions.width - MARGIN_RIGHT, Math.max(MARGIN_RIGHT, proposedLeft));
             setPosition({ top: clampedTop, left: clampedLeft });
         };
@@ -159,28 +157,27 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
         window.addEventListener("mouseup", onMouseUp);
     };
 
-    // Styles for the title bar to match ControlPanel
     const titleBarStyle: React.CSSProperties = {
         cursor: "move",
-        backgroundColor: "#282c34", // Match ControlPanel background
-        color: "white",             // Match ControlPanel text color
-        padding: "4px 8px",         // Match ControlPanel vertical padding
+        backgroundColor: "#282c34",
+        color: "white",
+        padding: "4px 8px",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         userSelect: "none",
-        borderBottom: "1px solid #4a4a4a", // Slightly darker border
+        borderBottom: "1px solid #4a4a4a",
         height: `${TITLEBAR_HEIGHT}px`,
-        fontSize: "0.875rem", // Match ControlPanel font size
-        fontWeight: "normal", // ControlPanel text is not bold by default
+        fontSize: "0.875rem",
+        fontWeight: "normal",
     };
 
     const closeButtonStyle: React.CSSProperties = {
         border: 'none',
         background: 'transparent',
-        fontSize: '1.2rem', // Adjusted for new title bar height
+        fontSize: '1.2rem',
         cursor: 'pointer',
-        color: '#b0b0b0', // Lighter color for close button on dark background
+        color: '#b0b0b0',
         padding: "0 5px",
     };
 
@@ -190,20 +187,20 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
             style={{
                 position: "fixed", top: position.top, left: position.left,
                 width: dimensions.width, height: dimensions.height,
-                backgroundColor: "#3a3a3a", // Slightly lighter background for palette content area
+                backgroundColor: "#3a3a3a",
                 color: "white",
-                border: "1px solid #4a4a4a", // Border to match general theme
+                border: "1px solid #4a4a4a",
                 borderRadius: "6px", display: "flex", flexDirection: "column",
-                zIndex: 999, // Ensure it's below notification banner (1000) but above board
+                zIndex: 400, // Lower z-index than ControlPanel's floating bar
                 boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
                 minWidth: MIN_WIDTH, minHeight: MIN_HEIGHT, overflow: "hidden",
             }}
         >
             <div
                 onMouseDown={handleMoveStart}
-                style={titleBarStyle} // Apply new title bar styles
+                style={titleBarStyle}
             >
-                <span style={{ fontWeight: "bold" }}>Piece Palette ({unplacedPieces.length})</span> {/* Kept bold for emphasis */}
+                <span style={{ fontWeight: "bold" }}>Piece Palette ({unplacedPieces.length})</span>
                 <button onClick={onClose} style={closeButtonStyle} title="Close Palette" > × </button>
             </div>
 
@@ -239,8 +236,8 @@ const PiecePalette: React.FC<PiecePaletteProps> = ({
                 onMouseDown={handleResizeGesture}
                 style={{
                     position: "absolute", right: 0, bottom: 0, width: "14px",
-                    height: "14px", cursor: "nwse-resize", backgroundColor: "#555", // Darker resize handle
-                    borderTopLeftRadius: "4px", zIndex: 1001,
+                    height: "14px", cursor: "nwse-resize", backgroundColor: "#555",
+                    borderTopLeftRadius: "4px", zIndex: 1001, // Keep high for resize handle
                 }}
             />
         </div>

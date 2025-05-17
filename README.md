@@ -45,6 +45,8 @@ This project transforms the original static puzzle viewer into a dynamic, client
 - [x] Fix symbol motifs
 - [ ] Support motifs_order parameter on url load
 - [x] Fix Piece Palette changing height when window is resized horizontally
+- [ ] Fix piece drag highlight being hidden by placed piece
+- [ ] Fix piece drag size to be smaller than board pieces
 - [ ] Fix piece dropping not always properly detected
 
 ### ✨ UX Improvements
@@ -57,7 +59,7 @@ This project transforms the original static puzzle viewer into a dynamic, client
 - [x] Create a better Title
 - [x] Convert 'Constraint' alerts into notification banners
 - [x] Make the Control Panel text/buttons vertically smaller
-- [ ] Add a hamburger button in the upper left of the Control Panel to hide/show the Control Panel
+- [x] Add a hamburger button in the upper left of the Control Panel to hide/show the Control Panel
 - [x] Add an Image that links to the github repo into the Control Panel
 - [x] Make Piece Palette start taller and below the Control Panel
 - [x] Make 'Show Pieces' and 'Hide Pieces' button the same width

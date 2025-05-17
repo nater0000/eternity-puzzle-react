@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState, useLayoutEffect } from "react";
 import Piece from "./Piece";
 import type { BoardPosition } from "../types/puzzle";
 import type { MotifStyle } from "../App";
@@ -9,9 +9,10 @@ interface PuzzleBoardProps {
     board: BoardPosition[];
     motifStyle: MotifStyle;
     rotationMap: Record<number, number>;
-    onDropPiece: (index: number, pieceId: number, rotation: number, originalIndex: number) => void; // Added originalIndex
+    onDropPiece: (index: number, pieceId: number, rotation: number, originalIndex: number) => void;
     onRemovePiece: (index: number) => void;
     onRotatePiece: (index: number) => void;
+    controlPanelSpace: number; // New prop: The space taken by the control panel
 }
 
 const MAX_PIECE_SIZE = 120;
@@ -26,89 +27,90 @@ const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
     onDropPiece,
     onRemovePiece,
     onRotatePiece,
+    controlPanelSpace, // Use this prop
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [squareSize, setSquareSize] = useState(60);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const padding = 8;
 
-    useEffect(() => {
+    // useLayoutEffect is better for DOM measurements that affect layout
+    useLayoutEffect(() => {
         const updateSize = () => {
             const container = containerRef.current;
             if (!container) return;
-            const { clientWidth, clientHeight } = container;
-            const availableGridWidth = clientWidth - (padding * 2);
-            const availableGridHeight = clientHeight - (padding * 2);
+
+            // clientWidth/Height are the dimensions of containerRef (the outer div of PuzzleBoard)
+            // These dimensions are affected by the parent's (board-wrapper) padding and height.
+            const availableGridWidth = container.clientWidth - (padding * 2);
+            const availableGridHeight = container.clientHeight - (padding * 2);
+
             const maxSquareWidth = availableGridWidth / width;
             const maxSquareHeight = availableGridHeight / height;
             let newSize = Math.floor(Math.min(maxSquareWidth, maxSquareHeight));
             newSize = Math.min(newSize, MAX_PIECE_SIZE);
             newSize = Math.max(newSize, MIN_PIECE_SIZE);
-            setSquareSize(newSize);
+
+            // Only update if the size actually changes to prevent potential infinite loops
+            // if something else in the effect causes a re-render.
+            setSquareSize(currentSize => currentSize !== newSize ? newSize : currentSize);
         };
-        updateSize();
+
+        updateSize(); // Initial size calculation
+
+        // Also listen to window resize for general responsiveness
         window.addEventListener("resize", updateSize);
         return () => window.removeEventListener("resize", updateSize);
-    }, [width, height, padding]);
+
+        // Add controlPanelSpace to dependencies. When it changes, PuzzleBoard's container size effectively changes.
+    }, [width, height, padding, controlPanelSpace]);
 
     const handleDrop = (e: React.DragEvent, index: number) => {
-        // console.log(`PuzzleBoard: Drop event fired on index ${index}`); // Removed debugging log
-        e.preventDefault(); // Crucial for drop to work
+        e.preventDefault();
         setDragOverIndex(null);
 
-        const pieceIdStr = e.dataTransfer.getData("text/plain"); // Use text/plain
-        const rotationStr = e.dataTransfer.getData("rotation"); // Keep this key for rotation
-        const originalIndexStr = e.dataTransfer.getData("originalIndex"); // Get original index
-
-        // --- Removed detailed logging for raw dataTransfer values ---
-        // console.log(`PuzzleBoard: Raw dataTransfer.getData("text/plain"): "${pieceIdStr}"`);
-        // console.log(`PuzzleBoard: Raw dataTransfer.getData("rotation"): "${rotationStr}"`);
-        // console.log(`PuzzleBoard: Raw dataTransfer.getData("originalIndex"): "${originalIndexStr}"`);
-        // ---------------------------------------------------------
+        const pieceIdStr = e.dataTransfer.getData("text/plain");
+        const rotationStr = e.dataTransfer.getData("rotation");
+        const originalIndexStr = e.dataTransfer.getData("originalIndex");
 
         const pieceId = parseInt(pieceIdStr, 10);
         const rotationPalette = parseInt(rotationStr, 10) || 0;
-        const originalIndex = parseInt(originalIndexStr, 10); // Parse original index
-
-        // console.log(`PuzzleBoard: Parsed pieceId: ${pieceId}, Parsed rotation: ${rotationPalette}, Parsed originalIndex: ${originalIndex}`); // Removed debugging log
+        const originalIndex = parseInt(originalIndexStr, 10);
 
         if (!isNaN(pieceId)) {
-            // Pass originalIndex to the drop handler in App.tsx
             onDropPiece(index, pieceId, rotationPalette, originalIndex);
-        } else {
-            // console.log("PuzzleBoard: Dropped item did not have a valid pieceId."); // Removed debugging log
-            // console.log("Available data types:", e.dataTransfer.types); // Removed debugging log
         }
     };
 
     const handleDragOver = (e: React.DragEvent, index: number) => {
-        // console.log(`PuzzleBoard: DragOver event fired on index ${index}`); // Keep this if needed, but can be noisy
-        e.preventDefault(); // Crucial for drop to work
+        e.preventDefault();
         if (index !== dragOverIndex) {
             setDragOverIndex(index);
         }
         e.dataTransfer.dropEffect = "move";
     };
 
-    const handleDragLeaveCell = () => { // Renamed to avoid conflict with board's onDragLeave
+    const handleDragLeaveCell = () => {
         setDragOverIndex(null);
     };
 
-    // Passed the piece's index to this handler
     const handleDragStartBoardPiece = (e: React.DragEvent, pieceId: number, rotationValue: number, originalIndex: number) => {
-        // console.log(`PuzzleBoard: Dragging board piece ID ${pieceId} from index ${originalIndex} with rotation ${rotationValue} started.`); // Removed debugging log
-        // console.log(`PuzzleBoard: Setting dataTransfer - pieceId: ${pieceId}, rotation: ${rotationValue}, originalIndex: ${originalIndex}`); // Removed debugging log
-        e.dataTransfer.setData("text/plain", pieceId.toString()); // Explicitly set data type
-        e.dataTransfer.setData("rotation", rotationValue.toString()); // Keep this key for rotation
-        e.dataTransfer.setData("originalIndex", originalIndex.toString()); // Store the original index
+        e.dataTransfer.setData("text/plain", pieceId.toString());
+        e.dataTransfer.setData("rotation", rotationValue.toString());
+        e.dataTransfer.setData("originalIndex", originalIndex.toString());
         e.dataTransfer.effectAllowed = "move";
     };
 
-    const handleContextMenu = (e: React.MouseEvent, index: number) => {
+    const handlePieceContextMenu = (e: React.MouseEvent, index: number) => {
         e.preventDefault();
+        e.stopPropagation();
         if (board[index]?.piece) {
             onRemovePiece(index);
         }
+    };
+
+    const handleGridContextMenu = (e: React.MouseEvent) => {
+        e.preventDefault();
     };
 
     const gridGap = Math.max(1, Math.floor(squareSize * 0.03));
@@ -118,7 +120,9 @@ const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
             ref={containerRef}
             style={{
                 flexGrow: 1, display: "flex", justifyContent: "center", alignItems: "center",
-                overflow: "hidden", padding: `${padding}px`, width: "100%", height: "100%",
+                overflow: "hidden",
+                padding: `${padding}px`,
+                width: "100%", height: "100%",
                 boxSizing: 'border-box'
             }}
             onDragLeave={() => setDragOverIndex(null)}
@@ -129,6 +133,7 @@ const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                     gridTemplateRows: `repeat(${height}, ${squareSize}px)`, gap: `${gridGap}px`,
                     border: "1px solid #333", backgroundColor: "#4a4a4a",
                 }}
+                onContextMenu={handleGridContextMenu}
             >
                 {board.map((cell, index) => {
                     const isHovered = index === dragOverIndex;
@@ -137,51 +142,29 @@ const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
 
                     return (
                         <div
-                            // --- Corrected Key: Use x and y coordinates for stable key ---
                             key={`${cell.x}-${cell.y}`}
-                            // -------------------------------------------------------------
                             onDrop={(e) => handleDrop(e, index)}
                             onDragOver={(e) => handleDragOver(e, index)}
-                            onDragLeave={handleDragLeaveCell} // Use cell-specific drag leave
-                            // --- Add native ondrop listener for debugging empty cells ---
-                            ref={node => {
-                                if (node && !cellPiece) { // Only for empty cells
-                                    node.ondrop = () => {
-                                        // console.log(`Native ondrop fired on empty cell index ${index}`); // Removed debugging log
-                                        // Do NOT call preventDefault here to avoid interfering with React's handler
-                                    };
-                                } else if (node) {
-                                    // If cell becomes occupied, remove the native listener
-                                    node.ondrop = null;
-                                }
-                            }}
-                            // -------------------------------------------------------------
+                            onDragLeave={handleDragLeaveCell}
                             style={{
-                                width: squareSize,
-                                height: squareSize,
+                                width: squareSize, height: squareSize,
                                 backgroundColor: isHovered ? "#777" : "#5D5D5D",
                                 border: `1px solid ${isHovered ? "#999" : "#666"}`,
-                                position: "relative",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
+                                position: "relative", display: "flex",
+                                alignItems: "center", justifyContent: "center",
                                 transition: "background-color 0.2s ease",
-                                // --- Added style for empty cells during drag to visualize drop target ---
-                                // Keeping the visual indicator but removing the drop-preview div
                                 ...(isHovered && !cellPiece && {
-                                    outline: '2px dashed #999', // Make drop target visible
+                                    outline: '2px dashed #999',
                                     outlineOffset: '-4px',
-                                    backgroundColor: 'rgba(150, 150, 150, 0.3)', // Change background slightly
+                                    backgroundColor: 'rgba(150, 150, 150, 0.3)',
                                 }),
-                                // -----------------------------------------------------------------------
                             }}
                         >
                             {cellPiece && (
                                 <div
                                     draggable
-                                    // Pass the current index to the drag start handler
                                     onDragStart={(e) => handleDragStartBoardPiece(e, cellPiece.id, pieceRotationValue, index)}
-                                    onContextMenu={(e) => handleContextMenu(e, index)}
+                                    onContextMenu={(e) => handlePieceContextMenu(e, index)}
                                     onClick={() => onRotatePiece(index)}
                                     style={{ width: "100%", height: "100%", cursor: "grab" }}
                                     title={`Piece ${cellPiece.id} (Rot: ${pieceRotationValue * 90}°)\nEdges: ${cellPiece.edges.join(',')}\nClick to rotate, Right-click to remove, Drag to move`}
@@ -194,7 +177,6 @@ const PuzzleBoard: React.FC<PuzzleBoardProps> = ({
                                     />
                                 </div>
                             )}
-                            {/* --- Removed the !cellPiece && isHovered drop-preview-indicator div --- */}
                         </div>
                     );
                 })}

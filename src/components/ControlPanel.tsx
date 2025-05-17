@@ -1,6 +1,6 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
-import type { MotifStyle } from '../App'; // Assuming App exports MotifStyle
-import githubIconSrc from '/git.png'; // Using the path from your last version
+﻿import React, { useRef, useLayoutEffect } from 'react';
+import type { MotifStyle } from '../App';
+import githubIconSrc from '/git.png';
 
 interface ControlPanelProps {
     motifStyle: MotifStyle;
@@ -10,10 +10,10 @@ interface ControlPanelProps {
     onRotateBoard: () => void;
     isPiecePaletteVisible: boolean;
     togglePiecePalette: () => void;
-    style?: React.CSSProperties;
     githubRepoUrl?: string;
-    // Callback to report its height to the parent (App.tsx)
-    reportHeight?: (height: number) => void;
+    reportHeight: (height: number) => void;
+    isContentVisible: boolean;
+    toggleContentVisibility: () => void;
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -24,102 +24,101 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     onRotateBoard,
     isPiecePaletteVisible,
     togglePiecePalette,
-    style,
     githubRepoUrl,
-    reportHeight
+    reportHeight,
+    isContentVisible,
+    toggleContentVisibility
 }) => {
-    const [isPanelContentVisible, setIsPanelContentVisible] = useState(true);
-    const panelRef = useRef<HTMLDivElement>(null);
+    const outermostPanelRef = useRef<HTMLDivElement>(null);
+    const panelContentRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (panelRef.current && reportHeight) {
-            reportHeight(panelRef.current.offsetHeight);
+    useLayoutEffect(() => {
+        if (reportHeight) {
+            if (isContentVisible && outermostPanelRef.current) {
+                reportHeight(outermostPanelRef.current.offsetHeight);
+            } else {
+                reportHeight(0);
+            }
         }
-        // Report height when panel content visibility changes too
-    }, [isPanelContentVisible, reportHeight]);
-
+    }, [isContentVisible, reportHeight, motifStyle, isPiecePaletteVisible]);
 
     const handleStyleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setMotifStyle(event.target.value as MotifStyle);
     };
 
-    // Adjusted styles for smaller vertical footprint while trying to preserve font size
     const commonButtonStyles: React.CSSProperties = {
-        marginLeft: '6px', // Slightly reduced margin
-        padding: '2px 6px', // Reduced vertical padding
-        fontSize: '0.875rem', // Kept from previous version
-        border: '1px solid #555',
-        borderRadius: '4px',
-        background: '#3a3a3a',
-        color: 'white',
-        cursor: 'pointer',
-        minWidth: '90px', // Slightly reduced minWidth
-        textAlign: 'center',
-        lineHeight: '1.4', // Adjust line height for better vertical fit
+        marginLeft: '6px', padding: '2px 6px', fontSize: '0.875rem', // 14px
+        border: '1px solid #555', borderRadius: '4px', background: '#3a3a3a',
+        color: 'white', cursor: 'pointer', minWidth: '90px',
+        textAlign: 'center', lineHeight: '1.4', // Approx 19.6px line height
+        height: 'calc(0.875rem * 1.4 + 2px * 2 + 2px)', // font-size * line-height + padding-top/bottom + border-top/bottom
     };
 
     const selectStyle: React.CSSProperties = {
-        padding: '2px 4px', // Reduced vertical padding
-        fontSize: '0.875rem', // Kept from previous version
-        background: '#333',
-        color: 'white',
-        border: '1px solid #555',
-        borderRadius: '4px',
-        marginLeft: '6px',
-        lineHeight: '1.4', // Adjust line height
+        padding: '2px 4px', fontSize: '0.875rem', background: '#333',
+        color: 'white', border: '1px solid #555', borderRadius: '4px',
+        marginLeft: '6px', lineHeight: '1.4',
+        height: 'calc(0.875rem * 1.4 + 2px * 2 + 2px)', // Match button height
     };
 
+    // Adjusted Hamburger Button Style
     const hamburgerButtonStyle: React.CSSProperties = {
-        background: 'none',
-        border: 'none',
-        color: 'white',
-        fontSize: '1.4rem', // Slightly smaller hamburger for vertical space
+        background: 'none', border: 'none', color: 'white',
+        fontSize: '1rem', // Reduced font size (was 1.4rem). Adjust as needed for "☰" character.
         cursor: 'pointer',
-        padding: '0 6px', // Reduced padding
+        padding: '2px 6px', // Match vertical padding of other buttons
         marginRight: '8px',
+        pointerEvents: 'auto', zIndex: 1,
+        display: 'flex', // For better control over centering the icon if needed
+        alignItems: 'center', // Vertically center the "☰" character within the button's padding box
+        justifyContent: 'center',
+        lineHeight: '1', // Set line height to 1 to prevent extra space from the font itself
+        // Ensure its height matches other buttons for alignment by parent flexbox
+        // Height will be determined by font-size, line-height, and padding.
+        // Explicit height can be set if needed, similar to commonButtonStyles
+        height: commonButtonStyles.height, // Match height of other buttons
     };
 
     const githubIconStyle: React.CSSProperties = {
-        height: '22px', // Slightly smaller for vertical fit
-        width: '22px',  // Slightly smaller for vertical fit
-        verticalAlign: 'middle',
-        borderRadius: '50%', // Circular mask
-        border: '1px solid #4a4a4a', // Optional: subtle border for the circle
+        height: '22px', width: '22px', verticalAlign: 'middle',
+        borderRadius: '50%', border: '1px solid #4a4a4a',
     };
 
     const githubLinkStyle: React.CSSProperties = {
-        marginLeft: 'auto', // Pushes it to the right
-        display: 'flex', // To align icon properly if needed
-        alignItems: 'center',
-        padding: '0 6px', // Minimal padding
+        marginLeft: 'auto', display: 'flex', alignItems: 'center',
+        padding: '0 6px', pointerEvents: 'auto', zIndex: 1,
+        height: commonButtonStyles.height, // Match height for alignment
+    };
+
+    const floatingBarStyle: React.CSSProperties = {
+        position: 'absolute', top: 0, left: 0, width: '100%',
+        padding: '4px 8px',
+        display: 'flex', alignItems: 'center', // This centers children vertically
+        zIndex: 500, boxSizing: 'border-box',
+        backgroundColor: isContentVisible ? '#282c34' : 'transparent',
+        boxShadow: isContentVisible ? '0 2px 5px rgba(0,0,0,0.3)' : 'none',
+        transition: 'background-color 0.3s ease, box-shadow 0.3s ease',
+        pointerEvents: isContentVisible ? 'auto' : 'none',
+        minHeight: `calc(${commonButtonStyles.height} + 4px * 2)` // Ensure floating bar is tall enough for its padding + button height
+    };
+
+    const contentAreaStyle: React.CSSProperties = {
+        display: 'flex', alignItems: 'center', flexGrow: 1,
+        justifyContent: 'flex-start', pointerEvents: 'auto',
     };
 
     return (
-        <div
-            ref={panelRef}
-            style={{
-                padding: '4px 8px', // Reduced vertical padding for the whole panel
-                backgroundColor: '#282c34',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                flexWrap: 'nowrap', // Prevent wrapping to ensure hamburger and git icon stay on ends
-                width: '100%',
-                boxSizing: 'border-box',
-                ...style
-            }}
-        >
+        <div ref={outermostPanelRef} style={floatingBarStyle}>
             <button
-                onClick={() => setIsPanelContentVisible(!isPanelContentVisible)}
+                onClick={toggleContentVisibility}
                 style={hamburgerButtonStyle}
-                title={isPanelContentVisible ? "Hide Controls" : "Show Controls"}
+                title={isContentVisible ? "Hide Controls" : "Show Controls"}
             >
                 ☰
             </button>
 
-            {isPanelContentVisible && (
-                <div style={{ display: 'flex', alignItems: 'center', flexGrow: 1, justifyContent: 'flex-start' }}>
-                    {/* Removed "Style:" label */}
+            {isContentVisible && (
+                <div ref={panelContentRef} style={contentAreaStyle}>
                     <select
                         id="motif-style"
                         value={motifStyle}
@@ -157,16 +156,18 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                     </button>
                 </div>
             )}
-            {/* Spacer to push GitHub icon to the right if controls are hidden */}
-            {!isPanelContentVisible && <div style={{ flexGrow: 1 }}></div>}
 
+            {isContentVisible ?
+                <div style={{ flexGrow: 1, pointerEvents: 'none' }}></div> :
+                <div style={{ flexGrow: 1, pointerEvents: 'none' }}></div>
+            }
 
             {githubRepoUrl && (
                 <a
                     href={githubRepoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="View project on GitHub" // Tooltip for GitHub link
+                    title="View project on GitHub"
                     style={githubLinkStyle}
                 >
                     <img

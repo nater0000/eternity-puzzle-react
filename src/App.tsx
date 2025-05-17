@@ -7,7 +7,7 @@ import { allPieces } from "./data/pieces";
 import type { PuzzleBoardData, BoardPosition } from "./types/puzzle";
 import './App.css';
 
-const gitRepoUrl = "https://github.com/nater0000/eternity-puzzle-react"; // As per your last version
+const gitRepoUrl = "https://github.com/nater0000/eternity-puzzle-react";
 const motifStyles = ["svg", "symbol"] as const;
 export type MotifStyle = (typeof motifStyles)[number];
 
@@ -40,13 +40,25 @@ const App: React.FC = () => {
     const [placedPieceIds, setPlacedPieceIds] = useState<Set<number>>(new Set());
     const [pieceRotations, setPieceRotations] = useState<Record<number, number>>({});
     const [isPiecePaletteVisible, setIsPiecePaletteVisible] = useState(true);
-    const [controlPanelHeight, setControlPanelHeight] = useState(0); // State for ControlPanel height
+
+    const [isControlPanelContentVisible, setIsControlPanelContentVisible] = useState(true);
+    const [controlPanelContentHeight, setControlPanelContentHeight] = useState(0); // Will store actual height when visible
 
     const [notification, setNotification] = useState<{ message: string; id: number } | null>(null);
     const notificationTimeoutRef = useRef<number | null>(null);
 
-    const handleControlPanelHeight = useCallback((height: number) => {
-        setControlPanelHeight(height);
+    const handleControlPanelHeightChange = useCallback((height: number) => {
+        // Only update if the height actually changes to prevent unnecessary re-renders
+        setControlPanelContentHeight(prevHeight => {
+            if (prevHeight !== height) {
+                return height;
+            }
+            return prevHeight;
+        });
+    }, []);
+
+    const toggleControlPanelContent = useCallback(() => {
+        setIsControlPanelContentVisible(prev => !prev);
     }, []);
 
     useEffect(() => {
@@ -410,6 +422,13 @@ const App: React.FC = () => {
         return <div style={{ color: "white", padding: "20px", textAlign: "center" }}>Loading puzzle definition...</div>;
     }
 
+    const paletteTopOffset = isControlPanelContentVisible && controlPanelContentHeight > 0
+        ? controlPanelContentHeight + 8
+        : 40;
+
+    // Effective height for the board wrapper takes into account if the control panel content is visible
+    const boardWrapperPaddingTop = isControlPanelContentVisible ? controlPanelContentHeight : 0;
+
     return (
         <div className="app-root">
             {notification && (
@@ -427,11 +446,36 @@ const App: React.FC = () => {
                 isPiecePaletteVisible={isPiecePaletteVisible}
                 togglePiecePalette={() => setIsPiecePaletteVisible(!isPiecePaletteVisible)}
                 githubRepoUrl={gitRepoUrl}
-                reportHeight={handleControlPanelHeight} // Pass callback to get height
+                reportHeight={handleControlPanelHeightChange}
+                isContentVisible={isControlPanelContentVisible}
+                toggleContentVisibility={toggleControlPanelContent}
             />
 
-            {/* Piece Palette is rendered after ControlPanel. Its initial top position will be adjusted. */}
-            {isPiecePaletteVisible && controlPanelHeight > 0 && ( // Ensure controlPanelHeight is measured before rendering
+            <div
+                className="board-wrapper"
+                style={{
+                    paddingTop: `${boardWrapperPaddingTop}px`,
+                    height: `calc(100vh - ${boardWrapperPaddingTop}px)` // Use 100vh for full viewport height consideration
+                }}
+            >
+                {puzzleData && ( // Ensure puzzleData is loaded before rendering PuzzleBoard
+                    <PuzzleBoard
+                        width={puzzleData.width}
+                        height={puzzleData.height}
+                        board={puzzleData.board}
+                        motifStyle={motifStyle}
+                        rotationMap={pieceRotations}
+                        onDropPiece={handleDropPiece}
+                        onRemovePiece={handleRemovePiece}
+                        onRotatePiece={handleRotatePieceOnBoard}
+                        // Pass the height that the control panel is occupying
+                        // This will trigger a re-calculation of squareSize in PuzzleBoard
+                        controlPanelSpace={boardWrapperPaddingTop}
+                    />
+                )}
+            </div>
+
+            {isPiecePaletteVisible && (
                 <PiecePalette
                     placedPieceIds={placedPieceIds}
                     motifStyle={motifStyle}
@@ -440,21 +484,9 @@ const App: React.FC = () => {
                     onRotatePiece={handleRotatePalettePiece}
                     pieceRotations={pieceRotations}
                     onClose={() => setIsPiecePaletteVisible(false)}
-                    initialTopOffset={controlPanelHeight + 8} // Pass the offset (height + margin)
+                    initialTopOffset={paletteTopOffset}
                 />
             )}
-            <div className="board-wrapper">
-                <PuzzleBoard
-                    width={puzzleData.width}
-                    height={puzzleData.height}
-                    board={puzzleData.board}
-                    motifStyle={motifStyle}
-                    rotationMap={pieceRotations}
-                    onDropPiece={handleDropPiece}
-                    onRemovePiece={handleRemovePiece}
-                    onRotatePiece={handleRotatePieceOnBoard}
-                />
-            </div>
         </div>
     );
 };
