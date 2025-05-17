@@ -166,7 +166,7 @@ export function loadLegacyPuzzle(): PuzzleBoardData | null {
             for (let i = 0; i < totalSpaces; i++) {
                 const idStrFromPieces = piecesStr.slice(i * 3, i * 3 + 3);
                 let piece: Piece | null = null;
-                let rotation = 0;
+                const rotation = 0;
                 if (idStrFromPieces !== emptyPieceIdString) {
                     const pieceNumberFromPieces = parseInt(idStrFromPieces, 10);
                     if (!isNaN(pieceNumberFromPieces) && pieceNumberFromPieces > 0 && pieceNumberFromPieces <= allPieces.length) {
