@@ -195,7 +195,7 @@ const BoardCell: React.FC<PuzzleBoardCellProps> = ({
 
     return (
         <div
-            ref={dropRef}
+            ref={dropRef as unknown as React.Ref<HTMLDivElement>}
             style={{
                 width: squareSize, height: squareSize,
                 backgroundColor: "#5D5D5D",
@@ -210,7 +210,7 @@ const BoardCell: React.FC<PuzzleBoardCellProps> = ({
         >
             {pieceToDisplay && (
                 <div
-                    ref={originalCellPiece && !isThisCellThePreviewTarget ? dragSourceRef : null}
+                    ref={originalCellPiece && !isThisCellThePreviewTarget ? dragSourceRef as unknown as React.Ref<HTMLDivElement> : null}
                     onClick={() => { if (originalCellPiece && !isThisCellThePreviewTarget) onRotatePiece(cellIndex); }}
                     style={{
                         width: "100%",

@@ -69,7 +69,7 @@ const DraggablePalettePiece: React.FC<DraggablePalettePieceProps> = ({
 
     return (
         <div
-            ref={drag}
+            ref={drag as unknown as React.Ref<HTMLDivElement>}
             onClick={onRotate}
             onContextMenu={onContextMenuRotate}
             style={{
