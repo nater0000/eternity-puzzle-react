@@ -1,4 +1,4 @@
-# 🧩 Eternity Puzzle Solver — React + Tailwind + Vite
+# 🧩 Eternity II Puzzle Playground
 
 Welcome to the interactive **Eternity II puzzle solver**, built with **React**, **TypeScript**, **Vite**, and styled using **TailwindCSS**.  
 This project transforms the original static puzzle viewer into a dynamic, client-side drag-and-drop playground 🎯.
@@ -28,7 +28,7 @@ This project transforms the original static puzzle viewer into a dynamic, client
 - 📦 Pop-up Piece Palette with rotation + drag handling
 - 🧭 Rotation-aware motif rendering and edge positioning
 - 🧮 Responsive board scaling to fit view
-- 🎨 Toggle between SVG and Symbol motif styles
+- 🎨 Toggle between Original and Custom motif styles
 - 🧪 Board state auto-loaded from the URL
 - ✨ Animated drop effects and hover previews
 
@@ -43,11 +43,12 @@ This project transforms the original static puzzle viewer into a dynamic, client
 - [x] Fix svg motif consistency
 - [x] Fix Rotations when swapping edges/corners
 - [x] Fix symbol motifs
-- [ ] Support motifs_order parameter on url load
 - [x] Fix Piece Palette changing height when window is resized horizontally
-- [ ] Fix piece drag highlight being hidden by placed piece
-- [ ] Fix piece drag size to be smaller than board pieces
-- [ ] Fix piece dropping not always properly detected
+- [x] Fix piece drag highlight being hidden by placed piece
+- [x] Fix piece drag size to be smaller than board pieces
+- [x] Fix piece dropping not always properly detected
+- [ ] Support motifs_order parameter on url load
+- [ ] Fix visual glitches on piece drag highlighting
 
 ### ✨ UX Improvements
 
@@ -64,6 +65,9 @@ This project transforms the original static puzzle viewer into a dynamic, client
 - [x] Make Piece Palette start taller and below the Control Panel
 - [x] Make 'Show Pieces' and 'Hide Pieces' button the same width
 - [x] Rename 'Show/Hide Pieces' to 'Show/Hide Palette' or something better
+- [x] Custom drag and drop rendering
+- [x] Auto-rotate corner/edge pieces on drag
+- [x] Add ghost drop preview effect on hovered targets
 - [ ] Support Mobile form factor: zoom, move, scroll palette, drag pieces
 - [ ] Add Conflict Scoring
 - [ ] Add Type overlay
@@ -74,10 +78,13 @@ This project transforms the original static puzzle viewer into a dynamic, client
 - [ ] Add display toggles for 'Type'
 - [ ] Add display toggles for 'Score'
 - [ ] Add display toggles for 'Conflicts'
-- [ ] Add ghost drop preview effect on hovered targets
 - [ ] Add subtle animations to piece drop-ins and board transitions
-- [ ] Generate and Copy URL
+
+### ⚡ Future Features
+
+- [ ] Generate and Copy Puzzle URL
 - [ ] Support custom piece lists
+- [ ] Support png based motifs
 
 ### 🔐 Placement Constraints
 

@@ -1,4 +1,5 @@
 // src/data/pieces.ts
+import type { Piece as PieceDataType } from '../types/puzzle'; // Import the canonical Piece type
 
 /**
  * Eternity II piece codes in clockwise edge order (UP, RIGHT, DOWN, LEFT).
@@ -145,12 +146,7 @@ export const motifs_mapping_marie = [
 
 
 // Each piece string is in order [UP, RIGHT, DOWN, LEFT]
-export type PieceData = {
-  id: number;
-  edges: [string, string, string, string];
-};
-
-export const allPieces: PieceData[] = PIECES.map((edgeStr, index) => ({
+export const allPieces: PieceDataType[] = PIECES.map((edgeStr, index) => ({
   id: index,
   edges: edgeStr.split("") as [string, string, string, string],
 }));

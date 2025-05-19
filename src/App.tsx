@@ -1,10 +1,18 @@
 ﻿import React, { useEffect, useState, useCallback, useRef } from "react";
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import ControlPanel from "./components/ControlPanel";
 import PiecePalette from "./components/PiecePalette";
 import PuzzleBoard from "./components/PuzzleBoard";
 import { loadLegacyPuzzle } from "./lib/loadLegacyPuzzle";
 import { allPieces } from "./data/pieces";
-import type { PuzzleBoardData, BoardPosition } from "./types/puzzle";
+import type {
+    PuzzleBoardData,
+    BoardPosition,
+    Piece as PieceDataType,
+    DndDraggablePieceItem,
+    PreviewPieceData
+} from "./types/puzzle";
 import './App.css';
 
 const gitRepoUrl = "https://github.com/nater0000/eternity-puzzle-react";
@@ -15,11 +23,12 @@ const BORDER_MOTIF = 'a';
 
 type PieceTypeClassification = 'corner' | 'edge' | 'center';
 
-const getEffectiveEdges = (edges: [string, string, string, string], rotation: number): [string, string, string, string] => {
+// --- Utility functions (getEffectiveEdges, classifyPieceType) ---
+const getEffectiveEdges = (edges: [string, string, string, string], rotationStep: number): [string, string, string, string] => {
     const currentEdges = [...edges] as [string, string, string, string];
-    if (rotation === 0) return currentEdges;
+    if (rotationStep === 0) return currentEdges;
     const N = currentEdges.length;
-    const r = ((rotation % N) + N) % N;
+    const r = ((rotationStep % N) + N) % N;
     const rotated = [];
     for (let i = 0; i < N; i++) {
         rotated.push(currentEdges[(i - r + N) % N]);
@@ -33,6 +42,13 @@ const classifyPieceType = (pieceEdges: [string, string, string, string], borderM
     if (borderSides === 1) return 'edge';
     return 'center';
 };
+// --- End Utility Functions ---
+
+// Result type for our enhanced validation function
+export interface PlacementValidityResult { // Export if PuzzleBoard needs to know its structure
+    isValid: boolean;
+    fittingRotationStep?: number; // The rotation step (0-3) that allows the piece to fit
+}
 
 const App: React.FC = () => {
     const [puzzleData, setPuzzleData] = useState<PuzzleBoardData | null>(null);
@@ -42,19 +58,18 @@ const App: React.FC = () => {
     const [isPiecePaletteVisible, setIsPiecePaletteVisible] = useState(true);
 
     const [isControlPanelContentVisible, setIsControlPanelContentVisible] = useState(true);
-    const [controlPanelContentHeight, setControlPanelContentHeight] = useState(0); // Will store actual height when visible
+    const [controlPanelContentHeight, setControlPanelContentHeight] = useState(0);
 
     const [notification, setNotification] = useState<{ message: string; id: number } | null>(null);
     const notificationTimeoutRef = useRef<number | null>(null);
 
+    const [previewPiece, setPreviewPiece] = useState<PreviewPieceData | null>(null);
+    const [previewCellIndex, setPreviewCellIndex] = useState<number | null>(null);
+    const [isPreviewDropValid, setIsPreviewDropValid] = useState<boolean>(false);
+    const [currentlyDraggedItem, setCurrentlyDraggedItem] = useState<DndDraggablePieceItem | null>(null);
+
     const handleControlPanelHeightChange = useCallback((height: number) => {
-        // Only update if the height actually changes to prevent unnecessary re-renders
-        setControlPanelContentHeight(prevHeight => {
-            if (prevHeight !== height) {
-                return height;
-            }
-            return prevHeight;
-        });
+        setControlPanelContentHeight(prevHeight => prevHeight !== height ? height : prevHeight);
     }, []);
 
     const toggleControlPanelContent = useCallback(() => {
@@ -76,24 +91,22 @@ const App: React.FC = () => {
                     });
                 }
             }
-            setPuzzleData(loaded);
             const initialPlacedIds = new Set<number>();
             const initialRotationMap: Record<number, number> = {};
-            for (const pos of loaded.board) {
+            loaded.board.forEach(pos => {
                 if (pos.piece) {
                     initialPlacedIds.add(pos.piece.id);
                     initialRotationMap[pos.piece.id] = pos.rotation;
                 }
-            }
+            });
+            setPuzzleData(loaded);
             setPlacedPieceIds(initialPlacedIds);
             setPieceRotations(initialRotationMap);
         }
     }, []);
 
     const showNotification = useCallback((message: string) => {
-        if (notificationTimeoutRef.current !== null) {
-            clearTimeout(notificationTimeoutRef.current);
-        }
+        if (notificationTimeoutRef.current !== null) { clearTimeout(notificationTimeoutRef.current); }
         setNotification({ message, id: Date.now() });
         notificationTimeoutRef.current = window.setTimeout(() => {
             setNotification(null);
@@ -101,184 +114,154 @@ const App: React.FC = () => {
         }, 3000);
     }, []);
 
-    const handleDropPiece = (targetCellIndex: number, droppedPieceId: number, draggedPieceInitialRotation: number = 0, originalIndex: number) => {
-        if (!puzzleData) return;
-        const droppedPieceData = allPieces.find((p) => p.id === droppedPieceId);
-        if (!droppedPieceData) return;
+    // Enhanced validation: tries all rotations for edge/corner pieces
+    const determinePlacementValidityAndRotation = useCallback((
+        pieceEdges: [string, string, string, string],
+        initialRotationStep: number, // The piece's current rotation as it's being dragged
+        targetX: number,
+        targetY: number,
+        boardWidth: number,
+        boardHeight: number
+    ): PlacementValidityResult => {
+        const pieceClassification = classifyPieceType(pieceEdges, BORDER_MOTIF);
+        const isTargetCorner = (targetX === 0 && targetY === 0) || (targetX === boardWidth - 1 && targetY === 0) || (targetX === 0 && targetY === boardHeight - 1) || (targetX === boardWidth - 1 && targetY === boardHeight - 1);
+        const isTargetEdge = !isTargetCorner && (targetX === 0 || targetX === boardWidth - 1 || targetY === 0 || targetY === boardHeight - 1);
+
+        // Basic classification checks (must be on the right type of cell)
+        if (pieceClassification === 'corner' && !isTargetCorner) return { isValid: false, fittingRotationStep: initialRotationStep };
+        if (pieceClassification === 'edge' && !isTargetEdge && !isTargetCorner) return { isValid: false, fittingRotationStep: initialRotationStep };
+        if (pieceClassification === 'center' && (isTargetCorner || isTargetEdge)) return { isValid: false, fittingRotationStep: initialRotationStep };
+
+        if (pieceClassification === 'center') {
+            // Center pieces don't have border constraints affecting their rotation for placement validity.
+            // Any rotation is "valid" from a border perspective.
+            return { isValid: true, fittingRotationStep: initialRotationStep };
+        }
+
+        // For edge and corner pieces, try all 4 rotations
+        for (let rStep = 0; rStep < 4; rStep++) {
+            const effectiveEdges = getEffectiveEdges(pieceEdges, rStep);
+            let satisfiesAllConditions = true;
+
+            // 1. Check border alignment: Correct edges must face the border
+            if (targetY === 0 && effectiveEdges[0].toLowerCase() !== BORDER_MOTIF) satisfiesAllConditions = false;
+            if (targetX === boardWidth - 1 && effectiveEdges[1].toLowerCase() !== BORDER_MOTIF) satisfiesAllConditions = false;
+            if (targetY === boardHeight - 1 && effectiveEdges[2].toLowerCase() !== BORDER_MOTIF) satisfiesAllConditions = false;
+            if (targetX === 0 && effectiveEdges[3].toLowerCase() !== BORDER_MOTIF) satisfiesAllConditions = false;
+
+            // 2. Check that non-border edges don't face outwards if on a border slot
+            if (isTargetEdge) { // Only for pieces on an edge (not a corner)
+                if (targetY === 0 && targetX > 0 && targetX < boardWidth - 1 && effectiveEdges[2].toLowerCase() === BORDER_MOTIF) satisfiesAllConditions = false; // Top edge, bottom faces in
+                if (targetY === boardHeight - 1 && targetX > 0 && targetX < boardWidth - 1 && effectiveEdges[0].toLowerCase() === BORDER_MOTIF) satisfiesAllConditions = false; // Bottom edge, top faces in
+                if (targetX === 0 && targetY > 0 && targetY < boardHeight - 1 && effectiveEdges[1].toLowerCase() === BORDER_MOTIF) satisfiesAllConditions = false; // Left edge, right faces in
+                if (targetX === boardWidth - 1 && targetY > 0 && targetY < boardHeight - 1 && effectiveEdges[3].toLowerCase() === BORDER_MOTIF) satisfiesAllConditions = false; // Right edge, left faces in
+            }
+
+            if (!satisfiesAllConditions) continue;
+
+            const borderSidesAtRot = effectiveEdges.filter(edge => edge.toLowerCase() === BORDER_MOTIF).length;
+            if (pieceClassification === 'corner' && isTargetCorner) {
+                if (borderSidesAtRot !== 2) satisfiesAllConditions = false;
+            } else if (pieceClassification === 'edge' && isTargetEdge) {
+                if (borderSidesAtRot !== 1) satisfiesAllConditions = false;
+            } else if (pieceClassification === 'edge' && isTargetCorner) {
+                if (borderSidesAtRot !== 2) satisfiesAllConditions = false;
+            }
+
+            if (satisfiesAllConditions) {
+                return { isValid: true, fittingRotationStep: rStep };
+            }
+        }
+        return { isValid: false, fittingRotationStep: initialRotationStep }; // No rotation worked, return initial for preview styling
+    }, []);
+
+    const handlePieceDrop = (targetCellIndex: number, draggedItem: DndDraggablePieceItem) => {
+        console.log("[App] handlePieceDrop, targetIndex:", targetCellIndex, "item:", draggedItem);
+        if (!puzzleData || !previewPiece) {
+            setCurrentlyDraggedItem(null); setPreviewPiece(null); setPreviewCellIndex(null);
+            return;
+        }
+
+        const { id: droppedPieceId, source, originalBoardIndex, edges: draggedPieceEdges } = draggedItem;
+        // Use the rotation from the previewPiece state, as it contains the auto-determined fitting rotation
+        const finalRotationStep = previewPiece.currentRotationStep;
 
         const targetX = targetCellIndex % puzzleData.width;
         const targetY = Math.floor(targetCellIndex / puzzleData.width);
-        const boardWidth = puzzleData.width;
-        const boardHeight = puzzleData.height;
 
-        const targetCell = puzzleData.board[targetCellIndex];
-        const pieceOriginallyAtTarget = targetCell.piece;
-        const rotationOriginallyAtTarget = targetCell.rotation;
+        // Final validation with the determined (potentially auto-rotated) rotation from preview
+        const placementCheckResult = determinePlacementValidityAndRotation(draggedPieceEdges, finalRotationStep, targetX, targetY, puzzleData.width, puzzleData.height);
 
-        const pieceClassification = classifyPieceType(droppedPieceData.edges, BORDER_MOTIF);
-
-        const isTargetCorner = (targetX === 0 && targetY === 0) ||
-            (targetX === boardWidth - 1 && targetY === 0) ||
-            (targetX === 0 && targetY === boardHeight - 1) ||
-            (targetX === boardWidth - 1 && targetY === boardHeight - 1);
-        const isTargetEdge = !isTargetCorner && (targetX === 0 || targetX === boardWidth - 1 || targetY === 0 || targetY === boardHeight - 1);
-
-        if (pieceClassification === 'corner' && !isTargetCorner) {
-            showNotification("Corner pieces must be placed in corners.");
-            return;
-        }
-        if (pieceClassification === 'edge' && !isTargetEdge && !isTargetCorner) {
-            const effectiveEdges = getEffectiveEdges(droppedPieceData.edges, draggedPieceInitialRotation);
-            const borderSidesAtInitialRot = effectiveEdges.filter(edge => edge.toLowerCase() === BORDER_MOTIF).length;
-            if (isTargetCorner && borderSidesAtInitialRot < 2) {
-                showNotification("Edge pieces in corners require two border sides.");
-                return;
-            } else if (!isTargetEdge && !isTargetCorner) {
-                showNotification("Edge pieces must be placed on edges.");
-                return;
-            }
-        }
-        if (pieceClassification === 'center' && (isTargetCorner || isTargetEdge)) {
-            showNotification("Center pieces must be placed in the center area.");
+        // Crucially, ensure the final drop uses the exact rotation that was deemed valid for the preview
+        if (!placementCheckResult.isValid || placementCheckResult.fittingRotationStep !== finalRotationStep) {
+            showNotification("Invalid placement for drop (final check with preview rotation failed).");
+            setCurrentlyDraggedItem(null); setPreviewPiece(null); setPreviewCellIndex(null);
             return;
         }
 
-        let finalRotationForDrop = draggedPieceInitialRotation;
-        if (pieceClassification === 'corner' || pieceClassification === 'edge') {
-            let validRotationFound = false;
-            for (let r = 0; r < 4; r++) {
-                const effectiveEdges = getEffectiveEdges(droppedPieceData.edges, r);
-                let satisfies = true;
-                if (targetY === 0 && effectiveEdges[0].toLowerCase() !== BORDER_MOTIF) { satisfies = false; }
-                if (targetY > 0 && (isTargetEdge || isTargetCorner) && effectiveEdges[0].toLowerCase() === BORDER_MOTIF && !(targetX === 0 || targetX === boardWidth - 1)) { satisfies = false; }
-                if (targetX === boardWidth - 1 && effectiveEdges[1].toLowerCase() !== BORDER_MOTIF) { satisfies = false; }
-                if (targetX < boardWidth - 1 && (isTargetEdge || isTargetCorner) && effectiveEdges[1].toLowerCase() === BORDER_MOTIF && !(targetY === 0 || targetY === boardHeight - 1)) { satisfies = false; }
-                if (targetY === boardHeight - 1 && effectiveEdges[2].toLowerCase() !== BORDER_MOTIF) { satisfies = false; }
-                if (targetY < boardHeight - 1 && (isTargetEdge || isTargetCorner) && effectiveEdges[2].toLowerCase() === BORDER_MOTIF && !(targetX === 0 || targetX === boardWidth - 1)) { satisfies = false; }
-                if (targetX === 0 && effectiveEdges[3].toLowerCase() !== BORDER_MOTIF) { satisfies = false; }
-                if (targetX > 0 && (isTargetEdge || isTargetCorner) && effectiveEdges[3].toLowerCase() === BORDER_MOTIF && !(targetY === 0 || targetY === boardHeight - 1)) { satisfies = false; }
+        const actualDropRotationStep = finalRotationStep; // Use the rotation that the preview was showing
 
-                if (pieceClassification === 'corner' && isTargetCorner && satisfies) {
-                    const borderSidesAtRot = effectiveEdges.filter(edge => edge.toLowerCase() === BORDER_MOTIF).length;
-                    if (borderSidesAtRot !== 2) { satisfies = false; }
-                    if (targetX === 0 && targetY === 0 && (effectiveEdges[0].toLowerCase() !== BORDER_MOTIF || effectiveEdges[3].toLowerCase() !== BORDER_MOTIF)) { satisfies = false; }
-                    if (targetX === boardWidth - 1 && targetY === 0 && (effectiveEdges[0].toLowerCase() !== BORDER_MOTIF || effectiveEdges[1].toLowerCase() !== BORDER_MOTIF)) { satisfies = false; }
-                    if (targetX === 0 && targetY === boardHeight - 1 && (effectiveEdges[2].toLowerCase() !== BORDER_MOTIF || effectiveEdges[3].toLowerCase() !== BORDER_MOTIF)) { satisfies = false; }
-                    if (targetX === boardWidth - 1 && targetY === boardHeight - 1 && (effectiveEdges[2].toLowerCase() !== BORDER_MOTIF || effectiveEdges[1].toLowerCase() !== BORDER_MOTIF)) { satisfies = false; }
-                }
-                if (pieceClassification === 'edge' && isTargetEdge && satisfies) {
-                    const borderSidesAtRot = effectiveEdges.filter(edge => edge.toLowerCase() === BORDER_MOTIF).length;
-                    if (borderSidesAtRot !== 1) { satisfies = false; }
-                    if (targetY === 0 && targetX > 0 && targetX < boardWidth - 1 && effectiveEdges[0].toLowerCase() !== BORDER_MOTIF) { satisfies = false; }
-                    if (targetX === boardWidth - 1 && targetY > 0 && targetY < boardHeight - 1 && effectiveEdges[1].toLowerCase() !== BORDER_MOTIF) { satisfies = false; }
-                    if (targetY === boardHeight - 1 && targetX > 0 && targetX < boardWidth - 1 && effectiveEdges[2].toLowerCase() !== BORDER_MOTIF) { satisfies = false; }
-                    if (targetX === 0 && targetY > 0 && targetY < boardHeight - 1 && effectiveEdges[3].toLowerCase() !== BORDER_MOTIF) { satisfies = false; }
-                }
-                if (pieceClassification === 'edge' && isTargetCorner && satisfies) {
-                    const borderSidesAtRot = effectiveEdges.filter(edge => edge.toLowerCase() === BORDER_MOTIF).length;
-                    if (borderSidesAtRot !== 2) { satisfies = false; }
-                    if (targetX === 0 && targetY === 0 && (effectiveEdges[0].toLowerCase() !== BORDER_MOTIF || effectiveEdges[3].toLowerCase() !== BORDER_MOTIF)) { satisfies = false; }
-                    if (targetX === boardWidth - 1 && targetY === 0 && (effectiveEdges[0].toLowerCase() !== BORDER_MOTIF || effectiveEdges[1].toLowerCase() !== BORDER_MOTIF)) { satisfies = false; }
-                    if (targetX === 0 && targetY === boardHeight - 1 && (effectiveEdges[2].toLowerCase() !== BORDER_MOTIF || effectiveEdges[3].toLowerCase() !== BORDER_MOTIF)) { satisfies = false; }
-                    if (targetX === boardWidth - 1 && targetY === boardHeight - 1 && (effectiveEdges[2].toLowerCase() !== BORDER_MOTIF || effectiveEdges[1].toLowerCase() !== BORDER_MOTIF)) { satisfies = false; }
-                }
-                if (satisfies) {
-                    validRotationFound = true;
-                    finalRotationForDrop = r;
-                    break;
-                }
-            }
-            if (!validRotationFound) {
-                showNotification(`This ${pieceClassification} piece cannot fit here with any rotation.`);
-                return;
-            }
+        const droppedPieceFullData = allPieces.find((p: PieceDataType) => p.id === droppedPieceId);
+        if (!droppedPieceFullData) {
+            console.error("Dropped piece data not found in allPieces for board update!");
+            setCurrentlyDraggedItem(null); setPreviewPiece(null); setPreviewCellIndex(null);
+            return;
         }
+
+        const targetCellInBoard = puzzleData.board[targetCellIndex];
+        const pieceOriginallyAtTarget = targetCellInBoard.piece;
+        const rotationOriginallyAtTargetStep = targetCellInBoard.rotation;
 
         const updatedBoard = [...puzzleData.board];
         const newPieceRotations = { ...pieceRotations };
         const newPlacedPieceIds = new Set(placedPieceIds);
 
-        if (!isNaN(originalIndex)) {
-            const newOriginalCell: BoardPosition = { ...updatedBoard[originalIndex], piece: null, rotation: 0 };
+        if (source === 'board' && originalBoardIndex !== undefined && originalBoardIndex !== targetCellIndex) {
+            const originalCell = updatedBoard[originalBoardIndex];
+            updatedBoard[originalBoardIndex] = { ...originalCell, piece: null, rotation: 0 };
             if (pieceOriginallyAtTarget) {
-                const swappedPieceFullData = allPieces.find(p => p.id === pieceOriginallyAtTarget.id);
-                let finalRotationForSwappedPiece = rotationOriginallyAtTarget;
-                if (swappedPieceFullData) {
-                    const swappedPieceClassification = classifyPieceType(swappedPieceFullData.edges, BORDER_MOTIF);
-                    const originalCellX = originalIndex % boardWidth;
-                    const originalCellY = Math.floor(originalIndex / boardWidth);
-                    const isOriginalCellCorner = (originalCellX === 0 && originalCellY === 0) || (originalCellX === boardWidth - 1 && originalCellY === 0) || (originalCellX === 0 && originalCellY === boardHeight - 1) || (originalCellX === boardWidth - 1 && originalCellY === boardHeight - 1);
-                    const isOriginalCellEdge = !isOriginalCellCorner && (originalCellX === 0 || originalCellX === boardWidth - 1 || originalCellY === 0 || originalCellY === boardHeight - 1);
-
-                    if ((swappedPieceClassification === 'corner' || swappedPieceClassification === 'edge') && (isOriginalCellCorner || isOriginalCellEdge)) {
-                        let validRotationForSwappedFound = false;
-                        for (let r = 0; r < 4; r++) {
-                            const effectiveEdgesSwapped = getEffectiveEdges(swappedPieceFullData.edges, r);
-                            let satisfiesSwapped = true;
-                            if (originalCellY === 0 && effectiveEdgesSwapped[0].toLowerCase() !== BORDER_MOTIF) { satisfiesSwapped = false; }
-                            if (originalCellY > 0 && (isOriginalCellEdge || isOriginalCellCorner) && effectiveEdgesSwapped[0].toLowerCase() === BORDER_MOTIF && !(originalCellX === 0 || originalCellX === boardWidth - 1)) { satisfiesSwapped = false; }
-                            if (originalCellX === boardWidth - 1 && effectiveEdgesSwapped[1].toLowerCase() !== BORDER_MOTIF) { satisfiesSwapped = false; }
-                            if (originalCellX < boardWidth - 1 && (isOriginalCellEdge || isOriginalCellCorner) && effectiveEdgesSwapped[1].toLowerCase() === BORDER_MOTIF && !(originalCellY === 0 || originalCellY === boardHeight - 1)) { satisfiesSwapped = false; }
-                            if (originalCellY === boardHeight - 1 && effectiveEdgesSwapped[2].toLowerCase() !== BORDER_MOTIF) { satisfiesSwapped = false; }
-                            if (originalCellY < boardHeight - 1 && (isOriginalCellEdge || isOriginalCellCorner) && effectiveEdgesSwapped[2].toLowerCase() === BORDER_MOTIF && !(originalCellX === 0 || originalCellX === boardWidth - 1)) { satisfiesSwapped = false; }
-                            if (originalCellX === 0 && effectiveEdgesSwapped[3].toLowerCase() !== BORDER_MOTIF) { satisfiesSwapped = false; }
-                            if (originalCellX > 0 && (isOriginalCellEdge || isOriginalCellCorner) && effectiveEdgesSwapped[3].toLowerCase() === BORDER_MOTIF && !(originalCellY === 0 || originalCellY === boardHeight - 1)) { satisfiesSwapped = false; }
-
-                            if (swappedPieceClassification === 'corner' && isOriginalCellCorner && satisfiesSwapped) {
-                                const borderSidesAtRotSwapped = effectiveEdgesSwapped.filter(edge => edge.toLowerCase() === BORDER_MOTIF).length;
-                                if (borderSidesAtRotSwapped !== 2) { satisfiesSwapped = false; }
-                                if (originalCellX === 0 && originalCellY === 0 && (effectiveEdgesSwapped[0].toLowerCase() !== BORDER_MOTIF || effectiveEdgesSwapped[3].toLowerCase() !== BORDER_MOTIF)) { satisfiesSwapped = false; }
-                                if (originalCellX === boardWidth - 1 && originalCellY === 0 && (effectiveEdgesSwapped[0].toLowerCase() !== BORDER_MOTIF || effectiveEdgesSwapped[1].toLowerCase() !== BORDER_MOTIF)) { satisfiesSwapped = false; }
-                                if (originalCellX === 0 && originalCellY === boardHeight - 1 && (effectiveEdgesSwapped[2].toLowerCase() !== BORDER_MOTIF || effectiveEdgesSwapped[3].toLowerCase() !== BORDER_MOTIF)) { satisfiesSwapped = false; }
-                                if (originalCellX === boardWidth - 1 && originalCellY === boardHeight - 1 && (effectiveEdgesSwapped[2].toLowerCase() !== BORDER_MOTIF || effectiveEdgesSwapped[1].toLowerCase() !== BORDER_MOTIF)) { satisfiesSwapped = false; }
-                            }
-                            if (swappedPieceClassification === 'edge' && isOriginalCellEdge && satisfiesSwapped) {
-                                const borderSidesAtRotSwapped = effectiveEdgesSwapped.filter(edge => edge.toLowerCase() === BORDER_MOTIF).length;
-                                if (borderSidesAtRotSwapped !== 1) { satisfiesSwapped = false; }
-                                if (originalCellY === 0 && originalCellX > 0 && originalCellX < boardWidth - 1 && effectiveEdgesSwapped[0].toLowerCase() !== BORDER_MOTIF) { satisfiesSwapped = false; }
-                                if (originalCellX === boardWidth - 1 && originalCellY > 0 && originalCellY < boardHeight - 1 && effectiveEdgesSwapped[1].toLowerCase() !== BORDER_MOTIF) { satisfiesSwapped = false; }
-                                if (originalCellY === boardHeight - 1 && originalCellX > 0 && originalCellX < boardWidth - 1 && effectiveEdgesSwapped[2].toLowerCase() !== BORDER_MOTIF) { satisfiesSwapped = false; }
-                                if (originalCellX === 0 && originalCellY > 0 && originalCellY < boardHeight - 1 && effectiveEdgesSwapped[3].toLowerCase() !== BORDER_MOTIF) { satisfiesSwapped = false; }
-                            }
-                            if (swappedPieceClassification === 'edge' && isOriginalCellCorner && satisfiesSwapped) {
-                                const borderSidesAtRotSwapped = effectiveEdgesSwapped.filter(edge => edge.toLowerCase() === BORDER_MOTIF).length;
-                                if (borderSidesAtRotSwapped !== 2) { satisfiesSwapped = false; }
-                                if (originalCellX === 0 && originalCellY === 0 && (effectiveEdgesSwapped[0].toLowerCase() !== BORDER_MOTIF || effectiveEdgesSwapped[3].toLowerCase() !== BORDER_MOTIF)) { satisfiesSwapped = false; }
-                                if (originalCellX === boardWidth - 1 && originalCellY === 0 && (effectiveEdgesSwapped[0].toLowerCase() !== BORDER_MOTIF || effectiveEdgesSwapped[1].toLowerCase() !== BORDER_MOTIF)) { satisfiesSwapped = false; }
-                                if (originalCellX === 0 && originalCellY === boardHeight - 1 && (effectiveEdgesSwapped[2].toLowerCase() !== BORDER_MOTIF || effectiveEdgesSwapped[3].toLowerCase() !== BORDER_MOTIF)) { satisfiesSwapped = false; }
-                                if (originalCellX === boardWidth - 1 && originalCellY === boardHeight - 1 && (effectiveEdgesSwapped[2].toLowerCase() !== BORDER_MOTIF || effectiveEdgesSwapped[1].toLowerCase() !== BORDER_MOTIF)) { satisfiesSwapped = false; }
-                            }
-                            if (satisfiesSwapped) {
-                                finalRotationForSwappedPiece = r;
-                                validRotationForSwappedFound = true;
-                                break;
-                            }
-                        }
-                        if (!validRotationForSwappedFound) {
-                            showNotification(`Swapped piece (ID: ${swappedPieceFullData.id}) cannot fit. Swap cancelled.`);
-                            return;
-                        }
+                const swappedPieceData = allPieces.find(p => p.id === pieceOriginallyAtTarget.id);
+                if (swappedPieceData) {
+                    const swapValidation = determinePlacementValidityAndRotation(swappedPieceData.edges, rotationOriginallyAtTargetStep, originalCell.x, originalCell.y, puzzleData.width, puzzleData.height);
+                    if (swapValidation.isValid && swapValidation.fittingRotationStep !== undefined) {
+                        updatedBoard[originalBoardIndex] = { ...originalCell, piece: pieceOriginallyAtTarget, rotation: swapValidation.fittingRotationStep };
+                        if (pieceOriginallyAtTarget.id != null) newPieceRotations[pieceOriginallyAtTarget.id] = swapValidation.fittingRotationStep;
+                    } else {
+                        showNotification(`Cannot swap: Piece ${pieceOriginallyAtTarget.id} does not fit. Dragged piece not placed.`);
+                        updatedBoard[originalBoardIndex] = { ...originalCell, piece: droppedPieceFullData, rotation: actualDropRotationStep };
+                        if (!newPlacedPieceIds.has(droppedPieceFullData.id)) newPlacedPieceIds.add(droppedPieceFullData.id);
+                        newPieceRotations[droppedPieceFullData.id] = actualDropRotationStep;
+                        setCurrentlyDraggedItem(null); setPreviewPiece(null); setPreviewCellIndex(null);
+                        setPuzzleData({ ...puzzleData, board: updatedBoard });
+                        setPieceRotations(newPieceRotations);
+                        setPlacedPieceIds(newPlacedPieceIds);
+                        return;
                     }
                 }
-                newOriginalCell.piece = { ...pieceOriginallyAtTarget };
-                newOriginalCell.rotation = finalRotationForSwappedPiece;
-                newPieceRotations[pieceOriginallyAtTarget.id] = finalRotationForSwappedPiece;
             }
-            updatedBoard[originalIndex] = newOriginalCell;
-            updatedBoard[targetCellIndex] = { ...updatedBoard[targetCellIndex], piece: { ...droppedPieceData }, rotation: finalRotationForDrop };
-            newPieceRotations[droppedPieceId] = finalRotationForDrop;
-        } else {
-            updatedBoard[targetCellIndex] = { ...updatedBoard[targetCellIndex], piece: { ...droppedPieceData }, rotation: finalRotationForDrop };
-            newPlacedPieceIds.add(droppedPieceId);
-            newPieceRotations[droppedPieceId] = finalRotationForDrop;
-            if (pieceOriginallyAtTarget) {
+        } else if (source === 'palette' && pieceOriginallyAtTarget) {
+            if (pieceOriginallyAtTarget.id != null) {
+                newPlacedPieceIds.delete(pieceOriginallyAtTarget.id);
+                delete newPieceRotations[pieceOriginallyAtTarget.id];
+            }
+        } else if (pieceOriginallyAtTarget && pieceOriginallyAtTarget.id !== droppedPieceId) {
+            if (pieceOriginallyAtTarget.id != null) {
                 newPlacedPieceIds.delete(pieceOriginallyAtTarget.id);
                 delete newPieceRotations[pieceOriginallyAtTarget.id];
             }
         }
+
+        updatedBoard[targetCellIndex] = { ...targetCellInBoard, piece: droppedPieceFullData, rotation: actualDropRotationStep };
+        newPlacedPieceIds.add(droppedPieceId);
+        newPieceRotations[droppedPieceId] = actualDropRotationStep;
+
         setPuzzleData({ ...puzzleData, board: updatedBoard });
         setPieceRotations(newPieceRotations);
         setPlacedPieceIds(newPlacedPieceIds);
+
+        setCurrentlyDraggedItem(null);
+        setPreviewPiece(null);
+        setPreviewCellIndex(null);
     };
 
     const handleRemovePiece = (index: number) => {
@@ -301,89 +284,69 @@ const App: React.FC = () => {
         const pos = puzzleData.board[index];
         if (!pos.piece) return;
         const pieceId = pos.piece.id;
-        const pieceData = allPieces.find((p) => p.id === pieceId);
+        const pieceData = allPieces.find((p: PieceDataType) => p.id === pieceId);
         if (!pieceData) return;
 
-        const currentRotation = pieceRotations[pieceId] ?? 0;
-        let newProposedRotation = (currentRotation + 1) % 4;
+        const currentRotationStep = pieceRotations[pieceId] ?? 0;
+        let newProposedRotationStep = (currentRotationStep + 1) % 4; // Initial proposal
 
         const pieceClassification = classifyPieceType(pieceData.edges, BORDER_MOTIF);
-        const targetX = pos.x;
-        const targetY = pos.y;
-        const boardWidth = puzzleData.width;
-        const boardHeight = puzzleData.height;
-        const isTargetCorner = (targetX === 0 && targetY === 0) || (targetX === boardWidth - 1 && targetY === 0) || (targetX === 0 && targetY === boardHeight - 1) || (targetX === boardWidth - 1 && targetY === boardHeight - 1);
-        const isTargetEdge = !isTargetCorner && (targetX === 0 || targetX === boardWidth - 1 || targetY === 0 || targetY === boardHeight - 1);
-
         if (pieceClassification === 'corner' || pieceClassification === 'edge') {
-            let canRotateToNewProposed = false;
-            for (let i = 0; i < 4; i++) {
-                const effectiveEdges = getEffectiveEdges(pieceData.edges, newProposedRotation);
-                let rotationSatisfiesConstraints = true;
-                if (targetY === 0 && effectiveEdges[0].toLowerCase() !== BORDER_MOTIF) rotationSatisfiesConstraints = false;
-                if (targetY > 0 && (isTargetEdge || isTargetCorner) && effectiveEdges[0].toLowerCase() === BORDER_MOTIF && !(targetX === 0 || targetX === boardWidth - 1)) rotationSatisfiesConstraints = false;
-                if (targetX === boardWidth - 1 && effectiveEdges[1].toLowerCase() !== BORDER_MOTIF) rotationSatisfiesConstraints = false;
-                if (targetX < boardWidth - 1 && (isTargetEdge || isTargetCorner) && effectiveEdges[1].toLowerCase() === BORDER_MOTIF && !(targetY === 0 || targetY === boardHeight - 1)) { rotationSatisfiesConstraints = false; }
-                if (targetY === boardHeight - 1 && effectiveEdges[2].toLowerCase() !== BORDER_MOTIF) rotationSatisfiesConstraints = false;
-                if (targetY < boardHeight - 1 && (isTargetEdge || isTargetCorner) && effectiveEdges[2].toLowerCase() === BORDER_MOTIF && !(targetX === 0 || targetX === boardWidth - 1)) { rotationSatisfiesConstraints = false; }
-                if (targetX === 0 && effectiveEdges[3].toLowerCase() !== BORDER_MOTIF) rotationSatisfiesConstraints = false;
-                if (targetX > 0 && (isTargetEdge || isTargetCorner) && effectiveEdges[3].toLowerCase() === BORDER_MOTIF && !(targetY === 0 || targetY === boardHeight - 1)) { rotationSatisfiesConstraints = false; }
+            const boardWidth = puzzleData.width;
+            const boardHeight = puzzleData.height;
+            const targetX = pos.x;
+            const targetY = pos.y;
 
-                if (pieceClassification === 'corner' && isTargetCorner && rotationSatisfiesConstraints) {
-                    const borderSidesAtRot = effectiveEdges.filter(edge => edge.toLowerCase() === BORDER_MOTIF).length;
-                    if (borderSidesAtRot !== 2) rotationSatisfiesConstraints = false;
-                    if (targetX === 0 && targetY === 0 && (effectiveEdges[0].toLowerCase() !== BORDER_MOTIF || effectiveEdges[3].toLowerCase() !== BORDER_MOTIF)) rotationSatisfiesConstraints = false;
-                    if (targetX === boardWidth - 1 && targetY === 0 && (effectiveEdges[0].toLowerCase() !== BORDER_MOTIF || effectiveEdges[1].toLowerCase() !== BORDER_MOTIF)) rotationSatisfiesConstraints = false;
-                    if (targetX === 0 && targetY === boardHeight - 1 && (effectiveEdges[2].toLowerCase() !== BORDER_MOTIF || effectiveEdges[3].toLowerCase() !== BORDER_MOTIF)) rotationSatisfiesConstraints = false;
-                    if (targetX === boardWidth - 1 && targetY === boardHeight - 1 && (effectiveEdges[2].toLowerCase() !== BORDER_MOTIF || effectiveEdges[1].toLowerCase() !== BORDER_MOTIF)) rotationSatisfiesConstraints = false;
+            let foundNextValidRotation = false;
+            for (let i = 0; i < 4; ++i) { // Try up to 4 rotations to find the next valid one
+                const validityResult = determinePlacementValidityAndRotation(pieceData.edges, newProposedRotationStep, targetX, targetY, boardWidth, boardHeight);
+                if (validityResult.isValid) {
+                    // We use newProposedRotationStep itself if it's valid, determinePlacementValidityAndRotation might suggest a different fitting one
+                    // but for explicit rotation, we just check if the *next* increment is valid.
+                    // The key is that determinePlacementValidityAndRotation will confirm if newProposedRotationStep is valid.
+                    // If it returns a *different* fittingRotationStep, that means newProposedRotationStep itself wasn't the best fit,
+                    // but for user-triggered rotation, we stick to the increment if valid.
+                    // A more sophisticated approach might cycle to the *absolute next valid* rotation.
+                    // For now, let's check if the *incremented* rotation is valid.
+                    const directCheck = determinePlacementValidityAndRotation(pieceData.edges, newProposedRotationStep, targetX, targetY, boardWidth, boardHeight);
+                    if (directCheck.isValid && directCheck.fittingRotationStep === newProposedRotationStep) {
+                        foundNextValidRotation = true;
+                        break;
+                    }
                 }
-                if (pieceClassification === 'edge' && isTargetEdge && rotationSatisfiesConstraints) {
-                    const borderSidesAtRot = effectiveEdges.filter(edge => edge.toLowerCase() === BORDER_MOTIF).length;
-                    if (borderSidesAtRot !== 1) rotationSatisfiesConstraints = false;
-                    if (targetY === 0 && targetX > 0 && targetX < boardWidth - 1 && effectiveEdges[0].toLowerCase() !== BORDER_MOTIF) rotationSatisfiesConstraints = false;
-                    if (targetY === boardHeight - 1 && targetX > 0 && targetX < boardWidth - 1 && effectiveEdges[2].toLowerCase() !== BORDER_MOTIF) rotationSatisfiesConstraints = false;
-                    if (targetX === 0 && targetY > 0 && targetY < boardHeight - 1 && effectiveEdges[3].toLowerCase() !== BORDER_MOTIF) rotationSatisfiesConstraints = false;
-                    if (targetX === boardWidth - 1 && targetY > 0 && targetY < boardHeight - 1 && effectiveEdges[1].toLowerCase() !== BORDER_MOTIF) rotationSatisfiesConstraints = false;
-                }
-                if (pieceClassification === 'edge' && isTargetCorner && rotationSatisfiesConstraints) {
-                    const borderSidesAtRot = effectiveEdges.filter(edge => edge.toLowerCase() === BORDER_MOTIF).length;
-                    if (borderSidesAtRot !== 2) rotationSatisfiesConstraints = false;
-                    if (targetX === 0 && targetY === 0 && (effectiveEdges[0].toLowerCase() !== BORDER_MOTIF || effectiveEdges[3].toLowerCase() !== BORDER_MOTIF)) rotationSatisfiesConstraints = false;
-                    if (targetX === boardWidth - 1 && targetY === 0 && (effectiveEdges[0].toLowerCase() !== BORDER_MOTIF || effectiveEdges[1].toLowerCase() !== BORDER_MOTIF)) rotationSatisfiesConstraints = false;
-                    if (targetX === 0 && targetY === boardHeight - 1 && (effectiveEdges[2].toLowerCase() !== BORDER_MOTIF || effectiveEdges[3].toLowerCase() !== BORDER_MOTIF)) rotationSatisfiesConstraints = false;
-                    if (targetX === boardWidth - 1 && targetY === boardHeight - 1 && (effectiveEdges[2].toLowerCase() !== BORDER_MOTIF || effectiveEdges[1].toLowerCase() !== BORDER_MOTIF)) rotationSatisfiesConstraints = false;
-                }
-
-                if (rotationSatisfiesConstraints) {
-                    canRotateToNewProposed = true;
+                newProposedRotationStep = (newProposedRotationStep + 1) % 4;
+                if (newProposedRotationStep === (currentRotationStep + 1) % 4 && i > 0) { // Cycled all options
                     break;
                 }
-                newProposedRotation = (newProposedRotation + 1) % 4;
             }
-            if (!canRotateToNewProposed) {
-                showNotification(`This ${pieceClassification} piece cannot rotate further here.`);
+            if (!foundNextValidRotation) {
+                showNotification(`This ${pieceClassification} piece cannot rotate further here due to border constraints.`);
                 return;
             }
         }
-        setPieceRotations((prevRotations) => ({ ...prevRotations, [pieceId]: newProposedRotation }));
+        // If not a border piece or if rotation is allowed, apply it:
+        setPieceRotations((prevRotations) => ({ ...prevRotations, [pieceId]: newProposedRotationStep }));
         const updatedBoard = [...puzzleData.board];
-        updatedBoard[index] = { ...updatedBoard[index], rotation: newProposedRotation };
+        updatedBoard[index] = { ...updatedBoard[index], rotation: newProposedRotationStep };
         setPuzzleData({ ...puzzleData, board: updatedBoard });
     };
 
-    const handleRotatePalettePiece = (pieceId: number, currentPaletteRotation: number) => {
-        const newRotation = (currentPaletteRotation + 1) % 4;
-        setPieceRotations(prev => ({ ...prev, [pieceId]: newRotation }));
+    const handleRotatePalettePiece = (pieceId: number, currentRotationStep: number, direction: 'forward' | 'backward' = 'forward') => {
+        let newRotationStep = 0;
+        if (direction === 'forward') {
+            newRotationStep = (currentRotationStep + 1) % 4;
+        } else {
+            newRotationStep = (currentRotationStep + 3) % 4;
+        }
+        setPieceRotations(prev => ({ ...prev, [pieceId]: newRotationStep }));
     };
 
     const handleClearBoard = () => {
-        if (!puzzleData) return;
-        if (window.confirm("Are you sure you want to clear the board? This action cannot be undone.")) {
-            const newBoard = puzzleData.board.map(cell => ({ ...cell, piece: null, rotation: 0 }));
-            setPuzzleData({ ...puzzleData, board: newBoard });
-            setPlacedPieceIds(new Set());
-            setPieceRotations({});
-        }
+        if (!puzzleData || !window.confirm("Are you sure you want to clear the board?")) return;
+        const newBoard = puzzleData.board.map(cell => ({ ...cell, piece: null, rotation: 0 }));
+        setPuzzleData({ ...puzzleData, board: newBoard });
+        setPlacedPieceIds(new Set());
+        setPieceRotations({});
     };
 
     const handleRotateBoard = () => {
@@ -408,9 +371,9 @@ const App: React.FC = () => {
                 const newIndex = newY * newWidth + newX;
 
                 if (newIndex >= 0 && newIndex < newBoard.length) {
-                    const newPieceDataRotation = (cell.rotation + 1) % 4;
-                    newBoard[newIndex] = { x: newX, y: newY, piece: cell.piece, rotation: newPieceDataRotation };
-                    newPieceRotationsState[cell.piece.id] = newPieceDataRotation;
+                    const newPieceRotationStep = (cell.rotation + 1) % 4;
+                    newBoard[newIndex] = { x: newX, y: newY, piece: cell.piece, rotation: newPieceRotationStep };
+                    if (cell.piece.id != null) newPieceRotationsState[cell.piece.id] = newPieceRotationStep;
                 }
             }
         }
@@ -418,76 +381,67 @@ const App: React.FC = () => {
         setPieceRotations(newPieceRotationsState);
     };
 
-    if (!puzzleData) {
-        return <div style={{ color: "white", padding: "20px", textAlign: "center" }}>Loading puzzle definition...</div>;
-    }
+    if (!puzzleData) { return <div style={{ color: "white", padding: "20px", textAlign: "center" }}>Loading puzzle definition...</div>; }
 
-    const paletteTopOffset = isControlPanelContentVisible && controlPanelContentHeight > 0
-        ? controlPanelContentHeight + 8
-        : 40;
-
-    // Effective height for the board wrapper takes into account if the control panel content is visible
+    const paletteTopOffset = isControlPanelContentVisible && controlPanelContentHeight > 0 ? controlPanelContentHeight + 8 : 40;
     const boardWrapperPaddingTop = isControlPanelContentVisible ? controlPanelContentHeight : 0;
 
     return (
-        <div className="app-root">
-            {notification && (
-                <div key={notification.id} className="notification-banner">
-                    {notification.message}
+        <DndProvider backend={HTML5Backend}>
+            <div className="app-root">
+                {notification && (<div key={notification.id} className="notification-banner"> {notification.message} </div>)}
+
+                <ControlPanel
+                    motifStyle={motifStyle} setMotifStyle={setMotifStyle} motifStyles={[...motifStyles]}
+                    onClearBoard={handleClearBoard} onRotateBoard={handleRotateBoard}
+                    isPiecePaletteVisible={isPiecePaletteVisible} togglePiecePalette={() => setIsPiecePaletteVisible(!isPiecePaletteVisible)}
+                    githubRepoUrl={gitRepoUrl}
+                    reportHeight={handleControlPanelHeightChange}
+                    isContentVisible={isControlPanelContentVisible}
+                    toggleContentVisibility={toggleControlPanelContent}
+                />
+
+                <div className="board-wrapper" style={{ paddingTop: `${boardWrapperPaddingTop}px`, height: `calc(100vh - ${boardWrapperPaddingTop}px)` }}>
+                    {puzzleData && (
+                        <PuzzleBoard
+                            width={puzzleData.width} height={puzzleData.height} board={puzzleData.board}
+                            motifStyle={motifStyle} rotationMap={pieceRotations}
+                            onPieceDrop={handlePieceDrop}
+                            onRemovePiece={handleRemovePiece} onRotatePiece={handleRotatePieceOnBoard}
+                            controlPanelSpace={boardWrapperPaddingTop}
+
+                            previewPiece={previewPiece}
+                            setPreviewPiece={setPreviewPiece}
+                            previewCellIndex={previewCellIndex}
+                            setPreviewCellIndex={setPreviewCellIndex}
+                            isPreviewDropValid={isPreviewDropValid}
+                            setIsPreviewDropValid={setIsPreviewDropValid}
+                            determinePlacementValidityAndRotation={determinePlacementValidityAndRotation}
+                            currentlyDraggedItem={currentlyDraggedItem}
+                            setCurrentlyDraggedItem={setCurrentlyDraggedItem}
+                        />
+                    )}
                 </div>
-            )}
 
-            <ControlPanel
-                motifStyle={motifStyle}
-                setMotifStyle={setMotifStyle}
-                motifStyles={[...motifStyles]}
-                onClearBoard={handleClearBoard}
-                onRotateBoard={handleRotateBoard}
-                isPiecePaletteVisible={isPiecePaletteVisible}
-                togglePiecePalette={() => setIsPiecePaletteVisible(!isPiecePaletteVisible)}
-                githubRepoUrl={gitRepoUrl}
-                reportHeight={handleControlPanelHeightChange}
-                isContentVisible={isControlPanelContentVisible}
-                toggleContentVisibility={toggleControlPanelContent}
-            />
-
-            <div
-                className="board-wrapper"
-                style={{
-                    paddingTop: `${boardWrapperPaddingTop}px`,
-                    height: `calc(100vh - ${boardWrapperPaddingTop}px)` // Use 100vh for full viewport height consideration
-                }}
-            >
-                {puzzleData && ( // Ensure puzzleData is loaded before rendering PuzzleBoard
-                    <PuzzleBoard
-                        width={puzzleData.width}
-                        height={puzzleData.height}
-                        board={puzzleData.board}
-                        motifStyle={motifStyle}
-                        rotationMap={pieceRotations}
-                        onDropPiece={handleDropPiece}
-                        onRemovePiece={handleRemovePiece}
-                        onRotatePiece={handleRotatePieceOnBoard}
-                        // Pass the height that the control panel is occupying
-                        // This will trigger a re-calculation of squareSize in PuzzleBoard
-                        controlPanelSpace={boardWrapperPaddingTop}
+                {isPiecePaletteVisible && (
+                    <PiecePalette
+                        placedPieceIds={placedPieceIds} motifStyle={motifStyle}
+                        pieceRotations={pieceRotations}
+                        onRotatePiece={handleRotatePalettePiece}
+                        onClose={() => setIsPiecePaletteVisible(false)}
+                        initialTopOffset={paletteTopOffset}
+                        setCurrentlyDraggedItem={setCurrentlyDraggedItem}
+                        setPreviewPiece={setPreviewPiece}
+                        clearAllDragStates={() => {
+                            setPreviewPiece(null);
+                            setPreviewCellIndex(null);
+                            setIsPreviewDropValid(false);
+                            setCurrentlyDraggedItem(null);
+                        }}
                     />
                 )}
             </div>
-
-            {isPiecePaletteVisible && (
-                <PiecePalette
-                    placedPieceIds={placedPieceIds}
-                    motifStyle={motifStyle}
-                    onDragStart={() => { }}
-                    onDragEnd={() => { }}
-                    onRotatePiece={handleRotatePalettePiece}
-                    pieceRotations={pieceRotations}
-                    onClose={() => setIsPiecePaletteVisible(false)}
-                    initialTopOffset={paletteTopOffset}
-                />
-            )}
-        </div>
+        </DndProvider>
     );
 };
 
